@@ -1,0 +1,20 @@
+1 (mini-pc): https://notebookspro.ar/producto/mini-pc-asus-pn41-s1-b-intel-celeron-n4505-ssd-128-gb-8-gb-ram-2-nucleos/?attribute_pa_almacenamiento-y-memoria=disco-solido-256-gb-y-16-gb-ram-plus
+2 (monitor): https://globalecom.ar/producto/audio-y-video/tv-y-video/monitores/preventa-monitor-19-pulgadas-hd-1440x900-con-base-v-oficina/
+3 (hdmi mallado): https://criye.ar/productos/cable-hdmi-1-5-metros-full-hd-mallado-2-filtros/?variant=688980918&pf=mc
+4 (kit teclado-mouse): https://www.mercadolibre.com.ar/combo-kit-teclado-y-mouse-oficina-usb-t01-m22/up/MLAU4638843918#polycard_client=search-desktop&be_origin=backend&overlay_label=not_apply&search_layout=grid&position=2&type=product&tracking_id=4bf5c2ca-269f-499b-9cd0-d242b4c7607a&overlay_label_capability=not_apply&wid=MLA3745623500&sid=search
+5 (servidor | i5 4570): https://hardtechstore.com.ar/productos/pc-intel-core-i5-4440-16gb-ddr3-ram-ssd-480gb-teclado-mouse/?variant=1183016462&pf=mc
+6 (UPS 1000VA | ): https://gerbio.com.ar/servidores-conectividad-y-seguridad/ups/ups-hikvision-ds-1000va-54209-444557.html
+7 (switch 8puertos 10.100.1000): https://infotecnica.com.ar/producto/switch-gigabit-8-puertos-mercusys-mini-desktop/19939
+8 (balanza con etiquetadora): https://www.mercadolibre.com.ar/combo-balanza-systel-clipse-31kg--impresor-quo-novo-etiqueta/up/MLAU5411942775#polycard_client=search-desktop&be_origin=backend&overlay_label=not_apply&search_layout=grid&position=18&type=product&tracking_id=1e221395-cbc2-4478-87b1-3f3ab948f5fd&overlay_label_capability=not_apply&wid=MLA2168559329&sid=search
+9 (lector de barras): https://www.todomicro.com.ar/424-lector-de-codigo-de-barras-usb.html
+10 (impresor de tickets): https://www.mercadolibre.com.ar/impresora-termica-waggs-58-mm-usb-tickets-apto-comercio-comandera/p/MLA62548678#polycard_client=search-desktop&be_origin=backend&overlay_label=not_apply&search_layout=grid&position=5&type=product&tracking_id=d9a09032-a61f-4342-9e70-5af71bb11cfa&overlay_label_capability=not_apply&wid=MLA1593924595&sid=search
+11 (caja registradora): https://www.mercadolibre.com.ar/caja-registradora-gadnic-5-divisiones-bandeja-desmontable-3-modos-apertura-gaveta-dinero-interfaz-rj11rj12/p/MLA22564977?pdp_filters=item_id:MLA1714433905#is_advertising=true&searchVariation=MLA22564977&backend_model=search-backend&be_origin=backend&position=1&search_layout=grid&type=pad&tracking_id=a8e0f562-87de-4565-ade2-19d482fcca07&ad_domain=VQCATCORE_LST&ad_position=1&ad_click_id=ZDdlMWJlMmUtNThhOC00YTM4LTg0ODUtZWNlMTlmM2ZhZTE2
+12 (posnet getnet): https://www.getnet.net/ar/landings/cobra-con-getpos
+13 (cable cat6): https://www.mercadolibre.com.ar/utp-cat6-50m-amitosai-interior-gris-instalacion-pro/p/MLA48811627?pdp_filters=item_id:MLA1492738045#is_advertising=true&searchVariation=MLA48811627&backend_model=search-backend&be_origin=backend&position=3&search_layout=grid&type=pad&tracking_id=e332be93-cc2a-44cf-9a55-8f1de6e7494a&ad_domain=VQCATCORE_LST&ad_position=3&ad_click_id=OTczMDgyOTUtZTA0Mi00MDBkLThjZTItYTZlZTk3MWExZjI5
+14 (fichas rj45 (20u.)): https://www.mercadolibre.com.ar/fichas-rj45-pack-20-unidades-para-armado-de-cables-de-red/p/MLA2067149382#polycard_client=search-desktop&be_origin=backend&overlay_label=not_apply&search_layout=grid&position=5&type=product&tracking_id=3dc87220-dbcf-4323-89af-43024c8f6d4b&overlay_label_capability=not_apply&wid=MLA1118975708&sid=search
+15 (hdd 2x): https://www.mercadolibre.com.ar/hd-western-digital-wd-caviar-wd5000aakx-500gb-azul-excelente-reacondicionado/p/MLA2021412296#polycard_client=search-desktop&float_highlight=last_units&be_origin=backend&overlay_label=not_apply&search_layout=grid&position=6&type=product&tracking_id=7fc34c41-7a22-4dcb-b92e-a5561000e6e6&overlay_label_capability=not_apply&wid=MLA1861358841&sid=search
+
+
+POSIBLE (HOSTING)
+PLAN AWS LIGHTSAIL PLAN 2GB RAM | 2 VCPU | 60GB SSD : U$12/MES
+https://aws.amazon.com/es/lightsail/pricing/
