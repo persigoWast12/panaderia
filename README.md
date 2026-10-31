@@ -10,11 +10,11 @@ El proyecto se construye por etapas. Estado actual:
 | 2. Modelos, tablas y seed | ✅ |
 | 3. Login y sesiones | ✅ |
 | 4. Productos y stock | ✅ |
-| 5. Ventas | ⏳ |
+| 5. Ventas | ✅ |
 | 6. Frontend | ⏳ |
 | 7. Pruebas del flujo completo | ⏳ |
 
-Hoy el backend ya crea las tablas, carga los datos de ejemplo, tiene login con sesiones y roles, y permite consultar y administrar productos y stock. Todavía no registra ventas.
+Hoy el backend ya crea las tablas, carga los datos de ejemplo, tiene login con sesiones y roles, administra productos y stock, y registra ventas. Falta el frontend.
 
 ## Requisitos
 
@@ -130,9 +130,11 @@ Los roles son `cajero` y `encargado`. Los endpoints protegidos usan la dependenc
 | `PUT /productos/{id}` | Modifica nombre, precio, unidad, código o estado (solo encargado) |
 | `GET /stock` | Lista el stock de todos los productos, incluidos los inactivos |
 | `PUT /stock/{producto_id}` | Fija la cantidad disponible (solo encargado) |
+| `POST /ventas` | Registra una venta y descuenta stock (solo cajero) |
+| `GET /ventas?fecha=` | Lista las ventas del día o de la fecha indicada |
 | `GET /docs` | Documentación automática de FastAPI |
 
-Los endpoints de ventas se agregan en la etapa 5.
+El frontend se agrega en la etapa 6.
 
 ### Probar que está vivo
 
@@ -177,9 +179,35 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/stock/11 -Method Put `
 - El código de barras no se puede repetir.
 - La unidad solo se puede corregir si el producto todavía no tiene ventas.
 
+### Ventas
+
+Solo el cajero registra ventas; el encargado puede consultarlas. El backend calcula el total y descuenta el stock en una sola transacción: si falta stock, no se guarda nada.
+
+```powershell
+# Login como cajero (guardando la cookie en $sesion)
+$sesion = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+Invoke-RestMethod -Uri http://127.0.0.1:8000/login -Method Post `
+  -WebSession $sesion -ContentType "application/json" `
+  -Body '{"usuario":"cajero1","password":"cajero123"}'
+
+# Registrar una venta (no se manda el total)
+Invoke-RestMethod -Uri http://127.0.0.1:8000/ventas -Method Post `
+  -WebSession $sesion -ContentType "application/json" `
+  -Body '{"forma_pago":"efectivo","items":[{"producto_id":1,"cantidad":1.250},{"producto_id":4,"cantidad":2}]}'
+
+# Ventas de hoy o de una fecha
+Invoke-RestMethod -Uri http://127.0.0.1:8000/ventas -WebSession $sesion
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/ventas?fecha=2026-10-31" -WebSession $sesion
+```
+
+- `forma_pago`: `efectivo`, `billetera_virtual` o `tarjeta`.
+- Las cantidades de productos por `kg` aceptan decimales; las de `unidad` deben ser enteras.
+- Si se manda un `total` en el cuerpo, se ignora.
+- El precio unitario se copia del producto al momento de la venta.
+
 ## Frontend
 
-Pendiente (etapa 6). Será un proyecto Next.js con TypeScript y Tailwind, que llamará a `/api/...` y Next reenviará al backend.
+Pendiente (etapa 6). Será un proyecto Next.js con JavaScript (JSX) y Tailwind, que llamará a `/api/...` y Next reenviará al backend.
 
 ## Pruebas
 
@@ -199,7 +227,8 @@ panaderia/
 │   │   ├── __init__.py
 │   │   ├── auth.py        # /login, /logout, /me
 │   │   ├── productos.py   # /productos
-│   │   └── stock.py       # /stock
+│   │   ├── stock.py       # /stock
+│   │   └── ventas.py      # /ventas
 │   ├── seed.py            # datos de ejemplo
 │   ├── requirements.txt
 │   ├── requirements-dev.txt

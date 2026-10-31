@@ -1,5 +1,6 @@
 """Esquemas (Pydantic) que definen lo que entra y sale de la API."""
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -74,3 +75,37 @@ class StockOut(BaseModel):
     unidad: str
     activo: bool
     cantidad_disponible: float
+
+
+class ItemIn(BaseModel):
+    """Un renglón del carrito: producto y cantidad."""
+
+    producto_id: int = Field(gt=0)
+    cantidad: Decimal = Field(gt=0)
+
+
+class VentaIn(BaseModel):
+    """Datos para registrar una venta. El total no se acepta: lo calcula el backend."""
+
+    forma_pago: Literal["efectivo", "billetera_virtual", "tarjeta"]
+    items: list[ItemIn] = Field(min_length=1)
+
+
+class DetalleOut(BaseModel):
+    """Renglón de una venta ya registrada."""
+
+    producto_id: int
+    nombre: str
+    cantidad: float
+    precio_unitario: float
+    subtotal: float
+
+
+class VentaOut(BaseModel):
+    """Venta completa con sus renglones."""
+
+    id: int
+    fecha_hora: datetime
+    forma_pago: str
+    total: float
+    items: list[DetalleOut]
