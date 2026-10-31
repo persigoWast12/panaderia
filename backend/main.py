@@ -8,7 +8,7 @@ from sqlalchemy import delete
 
 from database import Base, SessionLocal, engine
 from models import Sesion  # también registra todas las tablas en Base.metadata
-from routers import auth
+from routers import auth, productos, stock
 from seed import cargar_datos_iniciales
 
 
@@ -35,6 +35,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Panadería", lifespan=lifespan)
 app.include_router(auth.router)
+app.include_router(productos.router)
+app.include_router(stock.router)
 
 
 @app.get("/test")

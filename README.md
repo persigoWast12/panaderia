@@ -9,12 +9,12 @@ El proyecto se construye por etapas. Estado actual:
 | 1. Estructura del backend | ✅ |
 | 2. Modelos, tablas y seed | ✅ |
 | 3. Login y sesiones | ✅ |
-| 4. Productos y stock | ⏳ |
+| 4. Productos y stock | ✅ |
 | 5. Ventas | ⏳ |
 | 6. Frontend | ⏳ |
 | 7. Pruebas del flujo completo | ⏳ |
 
-Hoy el backend ya crea las tablas, carga los datos de ejemplo y tiene login con sesiones y roles. Todavía no tiene endpoints de productos ni de ventas.
+Hoy el backend ya crea las tablas, carga los datos de ejemplo, tiene login con sesiones y roles, y permite consultar y administrar productos y stock. Todavía no registra ventas.
 
 ## Requisitos
 
@@ -103,12 +103,14 @@ El seed también carga 2 proveedores y 10 productos de panadería con stock inic
 El login se hace con `POST /login`:
 
 ```powershell
-curl.exe -i -c cookies.txt -H "Content-Type: application/json" `
-  -d "{\"usuario\":\"cajero1\",\"password\":\"cajero123\"}" `
-  http://127.0.0.1:8000/login
+# Guarda la cookie de sesión en $sesion
+$sesion = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+Invoke-RestMethod -Uri http://127.0.0.1:8000/login -Method Post `
+  -WebSession $sesion -ContentType "application/json" `
+  -Body '{"usuario":"cajero1","password":"cajero123"}'
 ```
 
-Si las credenciales son correctas, devuelve `{"nombre":"Cajero de prueba","rol":"cajero"}` y setea la cookie `session`. La cookie es `HttpOnly`, `SameSite=Lax`, `Path=/` y dura `SESSION_HOURS` horas.
+Si las credenciales son correctas, devuelve un objeto con `nombre` y `rol`, y setea la cookie `session`. La cookie es `HttpOnly`, `SameSite=Lax`, `Path=/` y dura `SESSION_HOURS` horas.
 
 En la tabla `sesion` se guarda **solo el hash SHA-256 del token**, nunca el token en claro. `POST /logout` borra la fila de la sesión actual y la cookie, y las sesiones vencidas se limpian al arrancar el servidor.
 
@@ -122,26 +124,58 @@ Los roles son `cajero` y `encargado`. Los endpoints protegidos usan la dependenc
 | `POST /login` | Inicia sesión: devuelve rol y nombre, y setea la cookie `session` |
 | `POST /logout` | Cierra la sesión actual y borra la cookie |
 | `GET /me` | Devuelve nombre y rol del empleado autenticado |
+| `GET /productos?q=` | Lista productos activos con su stock; `q` busca por nombre |
+| `GET /productos/codigo/{codigo}` | Busca un producto por código de barras (incluye inactivos) |
+| `POST /productos` | Crea un producto y su stock (solo encargado) |
+| `PUT /productos/{id}` | Modifica nombre, precio, unidad, código o estado (solo encargado) |
+| `GET /stock` | Lista el stock de todos los productos, incluidos los inactivos |
+| `PUT /stock/{producto_id}` | Fija la cantidad disponible (solo encargado) |
 | `GET /docs` | Documentación automática de FastAPI |
 
-Los endpoints de productos, stock y ventas se agregan en las etapas 4 y 5.
+Los endpoints de ventas se agregan en la etapa 5.
 
 ### Probar que está vivo
 
 ```powershell
-curl.exe http://127.0.0.1:8000/test
+Invoke-RestMethod http://127.0.0.1:8000/test
 ```
 
 ### Probar el login
 
 ```powershell
-# /me con la cookie guardada por el login
-curl.exe -i -b cookies.txt http://127.0.0.1:8000/me
+# /me con la sesión guardada por el login
+Invoke-RestMethod -Uri http://127.0.0.1:8000/me -WebSession $sesion
 
-# logout y reintento: /me debe dar 401
-curl.exe -i -b cookies.txt -c cookies.txt -X POST http://127.0.0.1:8000/logout
-curl.exe -i -b cookies.txt http://127.0.0.1:8000/me
+# Logout y reintento: el último comando debe fallar con 401
+Invoke-RestMethod -Uri http://127.0.0.1:8000/logout -Method Post -WebSession $sesion
+Invoke-RestMethod -Uri http://127.0.0.1:8000/me -WebSession $sesion
 ```
+
+### Productos y stock
+
+El cajero puede consultar productos y stock, pero no modificarlos. El encargado puede crear y editar productos y ajustar el stock; si el cajero intenta modificar, recibe `403`. Para las operaciones de escritura, iniciá sesión con `encargado1` y guardá la cookie en `$sesion`.
+
+```powershell
+# Listar y buscar (cajero o encargado)
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/productos?q=pan" -WebSession $sesion
+Invoke-RestMethod -Uri http://127.0.0.1:8000/productos/codigo/2000000000015 -WebSession $sesion
+
+# Crear un producto (encargado)
+Invoke-RestMethod -Uri http://127.0.0.1:8000/productos -Method Post `
+  -WebSession $sesion -ContentType "application/json" `
+  -Body '{"nombre":"Pan de nuez","codigo_barras":"2000000000114","unidad":"unidad","precio":1200,"cantidad_inicial":20}'
+
+# Ajustar stock (usá el id que devolvió la creación)
+Invoke-RestMethod -Uri http://127.0.0.1:8000/stock/11 -Method Put `
+  -WebSession $sesion -ContentType "application/json" `
+  -Body '{"cantidad_disponible":35.5}'
+```
+
+- `GET /productos` solo muestra productos activos.
+- `GET /stock` muestra todos, con `activo` incluido.
+- `GET /productos/codigo/{codigo}` devuelve también productos inactivos.
+- El código de barras no se puede repetir.
+- La unidad solo se puede corregir si el producto todavía no tiene ventas.
 
 ## Frontend
 
@@ -163,7 +197,9 @@ panaderia/
 │   ├── schemas.py         # esquemas de entrada y salida (Pydantic)
 │   ├── routers/
 │   │   ├── __init__.py
-│   │   └── auth.py        # /login, /logout, /me
+│   │   ├── auth.py        # /login, /logout, /me
+│   │   ├── productos.py   # /productos
+│   │   └── stock.py       # /stock
 │   ├── seed.py            # datos de ejemplo
 │   ├── requirements.txt
 │   ├── requirements-dev.txt
