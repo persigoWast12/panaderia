@@ -8,13 +8,13 @@ El proyecto se construye por etapas. Estado actual:
 |---|---|
 | 1. Estructura del backend | ✅ |
 | 2. Modelos, tablas y seed | ✅ |
-| 3. Login y sesiones | ⏳ |
+| 3. Login y sesiones | ✅ |
 | 4. Productos y stock | ⏳ |
 | 5. Ventas | ⏳ |
 | 6. Frontend | ⏳ |
 | 7. Pruebas del flujo completo | ⏳ |
 
-Hoy el backend ya crea las tablas y carga los datos de ejemplo, pero todavía no tiene login ni endpoints de productos o ventas.
+Hoy el backend ya crea las tablas, carga los datos de ejemplo y tiene login con sesiones y roles. Todavía no tiene endpoints de productos ni de ventas.
 
 ## Requisitos
 
@@ -67,7 +67,8 @@ COOKIE_SECURE=false
 SESSION_HOURS=12
 ```
 
-- `COOKIE_SECURE` y `SESSION_HOURS` se usan a partir de la etapa 3.
+- `COOKIE_SECURE` controla el flag `Secure` de la cookie de sesión. En la red local (HTTP) va en `false`.
+- `SESSION_HOURS` define cuántas horas dura una sesión (por defecto 12).
 - El archivo `.env` real está ignorado por git; nunca se sube.
 
 ### Arranque
@@ -81,7 +82,8 @@ Al iniciar, la aplicación:
 
 1. Crea las tablas si no existen (`create_all`).
 2. Carga el seed **solo si la base está vacía** (si no hay ningún empleado).
-3. Queda escuchando en `http://127.0.0.1:8000`.
+3. Borra las sesiones vencidas.
+4. Queda escuchando en `http://127.0.0.1:8000`.
 
 Hay que correr **un solo worker**. Con dos procesos, los dos podrían intentar cargar el seed a la vez.
 
@@ -96,19 +98,49 @@ Las contraseñas se guardan con hash bcrypt; las de la tabla son solo para desar
 
 El seed también carga 2 proveedores y 10 productos de panadería con stock inicial.
 
+### Login y sesiones
+
+El login se hace con `POST /login`:
+
+```powershell
+curl.exe -i -c cookies.txt -H "Content-Type: application/json" `
+  -d "{\"usuario\":\"cajero1\",\"password\":\"cajero123\"}" `
+  http://127.0.0.1:8000/login
+```
+
+Si las credenciales son correctas, devuelve `{"nombre":"Cajero de prueba","rol":"cajero"}` y setea la cookie `session`. La cookie es `HttpOnly`, `SameSite=Lax`, `Path=/` y dura `SESSION_HOURS` horas.
+
+En la tabla `sesion` se guarda **solo el hash SHA-256 del token**, nunca el token en claro. `POST /logout` borra la fila de la sesión actual y la cookie, y las sesiones vencidas se limpian al arrancar el servidor.
+
+Los roles son `cajero` y `encargado`. Los endpoints protegidos usan la dependencia `require_rol(...)` y responden `403` si el rol no coincide.
+
 ### Endpoints disponibles
 
 | Método y ruta | Qué hace |
 |---|---|
 | `GET /test` | Endpoint de prueba: responde `{"status":"ok"}` |
+| `POST /login` | Inicia sesión: devuelve rol y nombre, y setea la cookie `session` |
+| `POST /logout` | Cierra la sesión actual y borra la cookie |
+| `GET /me` | Devuelve nombre y rol del empleado autenticado |
 | `GET /docs` | Documentación automática de FastAPI |
 
-Los endpoints de login, productos, stock y ventas se agregan en las etapas 3, 4 y 5.
+Los endpoints de productos, stock y ventas se agregan en las etapas 4 y 5.
 
 ### Probar que está vivo
 
 ```powershell
 curl.exe http://127.0.0.1:8000/test
+```
+
+### Probar el login
+
+```powershell
+# /me con la cookie guardada por el login
+curl.exe -i -b cookies.txt http://127.0.0.1:8000/me
+
+# logout y reintento: /me debe dar 401
+curl.exe -i -b cookies.txt -c cookies.txt -X POST http://127.0.0.1:8000/logout
+curl.exe -i -b cookies.txt http://127.0.0.1:8000/me
 ```
 
 ## Frontend
@@ -127,7 +159,11 @@ panaderia/
 │   ├── main.py            # app FastAPI y arranque (tablas + seed)
 │   ├── database.py        # conexión y sesión de SQLAlchemy
 │   ├── models.py          # las 7 tablas
-│   ├── security.py        # hash de contraseñas
+│   ├── security.py        # hash de contraseñas, tokens y dependencias de rol
+│   ├── schemas.py         # esquemas de entrada y salida (Pydantic)
+│   ├── routers/
+│   │   ├── __init__.py
+│   │   └── auth.py        # /login, /logout, /me
 │   ├── seed.py            # datos de ejemplo
 │   ├── requirements.txt
 │   ├── requirements-dev.txt

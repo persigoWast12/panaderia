@@ -1,11 +1,14 @@
 """Aplicación FastAPI del sistema de la panadería."""
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import FastAPI
+from sqlalchemy import delete
 
-import models  # noqa: F401  (registra las tablas en Base.metadata)
 from database import Base, SessionLocal, engine
+from models import Sesion  # también registra todas las tablas en Base.metadata
+from routers import auth
 from seed import cargar_datos_iniciales
 
 
@@ -20,6 +23,10 @@ async def lifespan(app: FastAPI):
             print("Seed: datos de ejemplo cargados.")
         else:
             print("Seed: la base ya tenía datos, no se cargó nada.")
+
+        # Las sesiones vencidas ya no sirven: se borran al arrancar.
+        db.execute(delete(Sesion).where(Sesion.vence < datetime.now()))
+        db.commit()
     finally:
         db.close()
 
@@ -27,6 +34,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Panadería", lifespan=lifespan)
+app.include_router(auth.router)
 
 
 @app.get("/test")
