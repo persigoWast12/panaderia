@@ -18,7 +18,10 @@ MENSAJE_CODIGO_REPETIDO = "Ya existe un producto con ese código de barras."
 
 
 def _producto_out(producto: Producto) -> dict:
-    """Arma la respuesta plana del producto con su stock actual."""
+    """Arma la respuesta plana del producto con su stock actual.
+
+    Si por algún motivo faltara la fila de stock, devuelve 0 en vez de fallar.
+    """
     return {
         "id": producto.id,
         "nombre": producto.nombre,
@@ -39,9 +42,14 @@ def _producto_out(producto: Producto) -> dict:
 def listar_productos(
     q: str | None = None,
     db: Session = Depends(get_db),
-    _empleado: Empleado = Depends(require_rol("cajero", "encargado")),
+    _empleado: Empleado = Depends(require_rol("cajero", "encargado", "dueno")),
 ):
-    """Lista los productos activos, con su stock y búsqueda opcional por nombre."""
+    """Lista los productos activos, con su stock y búsqueda opcional por nombre.
+
+    El cajero usa este endpoint para buscar y vender; por eso no incluye los
+    productos inactivos (esos se ven en /stock, que es la pantalla del
+    encargado).
+    """
     consulta = (
         select(Producto)
         .options(selectinload(Producto.stock))
@@ -60,9 +68,13 @@ def listar_productos(
 def buscar_por_codigo(
     codigo_barras: str,
     db: Session = Depends(get_db),
-    _empleado: Empleado = Depends(require_rol("cajero", "encargado")),
+    _empleado: Empleado = Depends(require_rol("cajero", "encargado", "dueno")),
 ):
-    """Busca un producto por código exacto, incluso si está inactivo."""
+    """Busca un producto por código exacto, incluso si está inactivo.
+
+    El cajero necesita el dato aunque esté inactivo para poder avisar
+    "producto inactivo" en la pantalla de caja.
+    """
     producto = db.scalar(
         select(Producto)
         .options(selectinload(Producto.stock))
@@ -78,9 +90,13 @@ def buscar_por_codigo(
 def crear_producto(
     datos: ProductoIn,
     db: Session = Depends(get_db),
-    _empleado: Empleado = Depends(require_rol("encargado")),
+    _empleado: Empleado = Depends(require_rol("encargado", "dueno")),
 ):
-    """Crea un producto y su fila de stock en una sola transacción."""
+    """Crea un producto y su fila de stock en una sola transacción.
+
+    Se valida el código antes de insertar para dar un mensaje claro. El
+    `IntegrityError` queda como red de seguridad ante dos pedidos simultáneos.
+    """
     repetido = db.scalar(
         select(Producto).where(Producto.codigo_barras == datos.codigo_barras)
     )
@@ -120,9 +136,14 @@ def actualizar_producto(
     producto_id: int,
     datos: ProductoUpdate | None = None,
     db: Session = Depends(get_db),
-    _empleado: Empleado = Depends(require_rol("encargado")),
+    _empleado: Empleado = Depends(require_rol("encargado", "dueno")),
 ):
-    """Actualiza solo los campos enviados del producto."""
+    """Actualiza solo los campos enviados del producto.
+
+    `exclude_unset` permite mandar un único campo, por ejemplo `{"activo":
+    false}`. La unidad solo se puede cambiar si el producto todavía no tiene
+    ventas, para no romper el historial de cantidades.
+    """
     producto = db.get(Producto, producto_id)
     if producto is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado.")

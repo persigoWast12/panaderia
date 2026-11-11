@@ -1,4 +1,8 @@
-"""Conexión a PostgreSQL y sesión de SQLAlchemy."""
+"""Conexión a PostgreSQL y sesión de SQLAlchemy.
+
+`load_dotenv()` busca el archivo `.env` en el directorio desde donde se
+arranca el proceso. Por eso el backend se ejecuta desde `backend/`.
+"""
 
 import os
 

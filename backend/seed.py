@@ -1,4 +1,9 @@
-"""Carga inicial de datos de ejemplo (solo si la base está vacía)."""
+"""Carga inicial de datos de ejemplo (solo si la base está vacía).
+
+El seed crea los usuarios de prueba, dos proveedores y diez productos. Las
+contraseñas son solo para desarrollo y están documentadas en el README: al
+desplegar hay que cambiarlas y desactivar las cuentas que no se usen.
+"""
 
 from decimal import Decimal
 
@@ -11,13 +16,18 @@ from security import hash_password
 # Contraseñas de desarrollo. Se documentan en el README; en la base va solo el hash.
 PASSWORD_CAJERO = "cajero123"
 PASSWORD_ENCARGADO = "encargado123"
+PASSWORD_DUENO = "dueno123"
 
 
 def cargar_datos_iniciales(db: Session) -> bool:
     """Carga empleados, proveedores y productos si no hay ningún empleado.
 
-    Devuelve True si cargó datos y False si ya existían. Todo se guarda en una
-    sola transacción: si algo falla, no queda nada a medias.
+    Devuelve True si cargó datos y False si ya existían. Se usa el conteo de
+    empleados como señal de "base vacía". Todo se guarda en una sola
+    transacción: si algo falla, no queda nada a medias.
+
+    No está pensado para dos procesos arrancando a la vez: correr un solo
+    worker de uvicorn.
     """
     if db.scalar(select(func.count()).select_from(Empleado)) > 0:
         return False
@@ -42,6 +52,13 @@ def cargar_datos_iniciales(db: Session) -> bool:
                     rol="encargado",
                     usuario="encargado1",
                     password_hash=hash_password(PASSWORD_ENCARGADO),
+                    activo=True,
+                ),
+                Empleado(
+                    nombre="Dueño de prueba",
+                    rol="dueno",
+                    usuario="dueno1",
+                    password_hash=hash_password(PASSWORD_DUENO),
                     activo=True,
                 ),
             ]

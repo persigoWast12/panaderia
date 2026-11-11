@@ -1,0 +1,8 @@
+/* Tailwind 4 se importa directo; no hace falta tailwind.config.js. */
+@import "tailwindcss";
+
+/* Fondo cálido y texto oscuro para todas las pantallas. */
+body {
+  background-color: #fdf8f0;
+  color: #292524;
+}

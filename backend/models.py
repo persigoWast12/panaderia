@@ -20,11 +20,14 @@ from database import Base
 
 
 class Empleado(Base):
+    """Persona que usa el sistema: cajero, encargado, contador o dueño."""
+
     __tablename__ = "empleado"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
-    # 'cajero' o 'encargado'. Se usa String + CHECK para no crear un ENUM nativo.
+    # 'cajero', 'encargado', 'contador' o 'dueno'. Se usa String + CHECK para no
+    # crear un ENUM nativo.
     rol: Mapped[str] = mapped_column(String(20))
     # Se guarda siempre en minúsculas (se normaliza en el login y en el seed).
     usuario: Mapped[str] = mapped_column(String(50), unique=True)
@@ -35,11 +38,16 @@ class Empleado(Base):
     sesiones: Mapped[list[Sesion]] = relationship(back_populates="empleado")
 
     __table_args__ = (
-        CheckConstraint("rol IN ('cajero', 'encargado')", name="ck_empleado_rol"),
+        CheckConstraint(
+            "rol IN ('cajero', 'encargado', 'contador', 'dueno')",
+            name="ck_empleado_rol",
+        ),
     )
 
 
 class Proveedor(Base):
+    """Proveedor de productos. Un producto puede no tener proveedor."""
+
     __tablename__ = "proveedor"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -50,6 +58,8 @@ class Proveedor(Base):
 
 
 class Producto(Base):
+    """Producto vendible. Se desactiva en vez de borrarse para conservar ventas."""
+
     __tablename__ = "producto"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -77,6 +87,8 @@ class Producto(Base):
 
 
 class Stock(Base):
+    """Cantidad disponible de un producto (relación uno a uno con Producto)."""
+
     __tablename__ = "stock"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -95,6 +107,8 @@ class Stock(Base):
 
 
 class Venta(Base):
+    """Cabecera de una venta: empleado, fecha, forma de pago y total."""
+
     __tablename__ = "venta"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -120,6 +134,8 @@ class Venta(Base):
 
 
 class DetalleVenta(Base):
+    """Renglón de una venta; guarda la cantidad y el precio del momento."""
+
     __tablename__ = "detalle_venta"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -139,6 +155,8 @@ class DetalleVenta(Base):
 
 
 class Sesion(Base):
+    """Sesión abierta de un empleado. Guarda solo el hash del token."""
+
     __tablename__ = "sesion"
 
     id: Mapped[int] = mapped_column(primary_key=True)

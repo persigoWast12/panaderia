@@ -18,14 +18,22 @@ CENTAVOS = Decimal("0.01")
 
 
 def _subtotal(cantidad: Decimal, precio_unitario: Decimal) -> Decimal:
-    """Calcula un subtotal redondeado a dos decimales."""
+    """Calcula un subtotal redondeado a dos decimales.
+
+    Se usa la misma función al guardar el total de la venta y al reconstruir
+    la respuesta, para que el total coincida siempre con la suma de renglones.
+    """
     return (cantidad * precio_unitario).quantize(
         CENTAVOS, rounding=ROUND_HALF_UP
     )
 
 
 def _venta_out(venta: Venta) -> dict:
-    """Arma la respuesta de una venta con sus renglones y subtotales."""
+    """Arma la respuesta de una venta con sus renglones y subtotales.
+
+    El subtotal no es una columna: se recalcula con `_subtotal`, y el total se
+    obtiene sumando esos subtotales.
+    """
     items = []
     total = Decimal("0")
     for detalle in venta.detalles:
@@ -35,6 +43,7 @@ def _venta_out(venta: Venta) -> dict:
             {
                 "producto_id": detalle.producto_id,
                 "nombre": detalle.producto.nombre,
+                "unidad": detalle.producto.unidad,
                 "cantidad": detalle.cantidad,
                 "precio_unitario": detalle.precio_unitario,
                 "subtotal": subtotal,
@@ -56,7 +65,15 @@ def crear_venta(
     db: Session = Depends(get_db),
     empleado: Empleado = Depends(require_rol("cajero")),
 ):
-    """Registra una venta, calcula el total y descuenta el stock."""
+    """Registra una venta, calcula el total y descuenta el stock.
+
+    Todo ocurre en una sola transacción:
+    1. agrupa renglones repetidos;
+    2. valida productos, estado y cantidades;
+    3. bloquea las filas de stock en orden de id;
+    4. verifica stock, crea la venta y descuenta;
+    5. hace commit; ante cualquier error hace rollback y no deja nada a medias.
+    """
     # Agrupar renglones repetidos del mismo producto.
     cantidades: dict[int, Decimal] = {}
     for item in datos.items:
@@ -99,7 +116,9 @@ def crear_venta(
                 )
 
         # Bloquear el stock en orden de producto para que dos cajas no vendan
-        # el mismo último stock y para evitar deadlocks entre ventas.
+        # el mismo último stock y para evitar deadlocks entre ventas. El orden
+        # de los ids es importante: todas las transacciones piden las filas en
+        # el mismo orden.
         stocks = db.scalars(
             select(Stock)
             .where(Stock.producto_id.in_(ids))
@@ -136,6 +155,8 @@ def crear_venta(
             total=Decimal("0"),
         )
 
+        # Se copia el precio actual a cada renglón: si mañana cambia el
+        # precio del producto, la venta vieja conserva el valor original.
         total = Decimal("0")
         for producto_id in ids:
             producto = productos_por_id[producto_id]
@@ -169,9 +190,14 @@ def crear_venta(
 def listar_ventas(
     fecha: date | None = None,
     db: Session = Depends(get_db),
-    _empleado: Empleado = Depends(require_rol("cajero", "encargado")),
+    _empleado: Empleado = Depends(require_rol("contador", "dueno")),
 ):
-    """Lista las ventas de un día (hoy por defecto), más recientes primero."""
+    """Lista las ventas de un día (hoy por defecto), más recientes primero.
+
+    Se usa `func.date` para comparar solo la fecha. Para el volumen de una
+    panadería alcanza; si algún día crece, conviene filtrar por rango para
+    aprovechar el índice de `fecha_hora`.
+    """
     dia = fecha or date.today()
     ventas = db.scalars(
         select(Venta)

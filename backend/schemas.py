@@ -1,4 +1,9 @@
-"""Esquemas (Pydantic) que definen lo que entra y sale de la API."""
+"""Esquemas (Pydantic) que definen lo que entra y sale de la API.
+
+Las entradas validan tipos, límites y roles. En las salidas, el dinero y las
+cantidades se exponen como `float` para que el JSON sea simple de consumir en
+el frontend; internamente la base y los cálculos usan `Decimal`.
+"""
 
 from datetime import datetime
 from decimal import Decimal
@@ -17,8 +22,49 @@ class LoginIn(BaseModel):
 class MeOut(BaseModel):
     """Datos públicos del empleado autenticado."""
 
+    id: int
     nombre: str
+    usuario: str
     rol: str
+
+
+class EmpleadoIn(BaseModel):
+    """Datos para dar de alta a un empleado."""
+
+    nombre: str = Field(min_length=1, max_length=100)
+    usuario: str = Field(min_length=3, max_length=50)
+    rol: Literal["cajero", "encargado", "contador", "dueno"]
+    password: str = Field(min_length=8, max_length=72)
+    activo: bool = True
+
+
+class EmpleadoUpdate(BaseModel):
+    """Campos que el dueño puede corregir de un empleado."""
+
+    nombre: str | None = Field(default=None, min_length=1, max_length=100)
+    usuario: str | None = Field(default=None, min_length=3, max_length=50)
+    rol: Literal["cajero", "encargado", "contador", "dueno"] | None = None
+    activo: bool | None = None
+
+
+class EmpleadoOut(BaseModel):
+    """Datos de un empleado, sin el hash de la contraseña.
+
+    Es la única forma en que el hash puede salir de la base: nunca se incluye
+    en una respuesta de la API.
+    """
+
+    id: int
+    nombre: str
+    usuario: str
+    rol: str
+    activo: bool
+
+
+class PasswordIn(BaseModel):
+    """Nueva contraseña que asigna el dueño."""
+
+    password: str = Field(min_length=8, max_length=72)
 
 
 class ProductoIn(BaseModel):
@@ -73,8 +119,11 @@ class StockOut(BaseModel):
     nombre: str
     codigo_barras: str
     unidad: str
+    precio: float  # precio actual, para mostrarlo en la tabla de productos
     activo: bool
     cantidad_disponible: float
+    # El frontend lo usa para bloquear el cambio de unidad si ya hay ventas.
+    tiene_ventas: bool
 
 
 class ItemIn(BaseModel):
@@ -85,17 +134,26 @@ class ItemIn(BaseModel):
 
 
 class VentaIn(BaseModel):
-    """Datos para registrar una venta. El total no se acepta: lo calcula el backend."""
+    """Datos para registrar una venta.
+
+    El total no se acepta: lo calcula el backend a partir de los precios de la
+    base. Si el cliente lo manda igual, Pydantic lo ignora.
+    """
 
     forma_pago: Literal["efectivo", "billetera_virtual", "tarjeta"]
     items: list[ItemIn] = Field(min_length=1)
 
 
 class DetalleOut(BaseModel):
-    """Renglón de una venta ya registrada."""
+    """Renglón de una venta ya registrada.
+
+    `subtotal` no se guarda en la base: se recalcula al responder con la misma
+    fórmula que usa el total de la venta.
+    """
 
     producto_id: int
     nombre: str
+    unidad: str
     cantidad: float
     precio_unitario: float
     subtotal: float
