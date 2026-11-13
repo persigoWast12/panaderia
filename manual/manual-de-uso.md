@@ -31,7 +31,7 @@
 16. Backup y restore
 17. Solución de problemas
 18. Usuarios de prueba y límites
-19. Endpoints principales
+19. Referencia técnica
 
 ---
 
@@ -68,7 +68,7 @@ Abrir en el navegador:
 http://localhost:3000/login
 ```
 
-![Pantalla de login](img/01-login.png)
+![Pantalla de inicio de sesión](img/01-login.png)
 
 1. Escribir el **usuario**.
 2. Escribir la **contraseña**.
@@ -83,7 +83,7 @@ El sistema redirige automáticamente según el rol:
 
 Para cerrar sesión, usar el botón **Cerrar sesión** del encabezado.
 
-> **Importante:** si la sesión vence o se cierra desde otro lado, la próxima acción redirige al login.
+> **Importante:** si la sesión vence o se cierra desde otro lado, la próxima acción redirige al inicio de sesión.
 
 ### Usuarios de prueba
 
@@ -166,13 +166,13 @@ Para quitar un producto, usar **Quitar**.
    - Tarjeta.
 2. Tocar **Cobrar**.
 
-El backend calcula el total y descuenta el stock. Si no hay stock suficiente, no se guarda nada.
+El sistema calcula el total y descuenta el stock. Si no hay stock suficiente, no se registra la venta.
 
 ![Venta confirmada](img/05-venta-confirmada.png)
 
 El mensaje muestra el número de venta y el total registrado.
 
-> **Importante:** el total que muestra la pantalla es de referencia. El total oficial lo calcula el backend con los precios de la base.
+> **Importante:** el total que muestra la pantalla es de referencia. El total oficial lo calcula el sistema al cobrar, con los precios cargados.
 
 ### 4.6 Errores comunes en caja
 
@@ -181,7 +181,7 @@ El mensaje muestra el número de venta y el total registrado.
 | “No existe un producto con el código…” | El código no está cargado. |
 | “’Producto’ está inactivo.” | El producto existe pero fue desactivado. |
 | “No hay stock suficiente…” | La cantidad pedida supera el stock. |
-| “No se pudo conectar con el servidor…” | El backend no responde. |
+| “No se pudo conectar con el servidor…” | El sistema no está disponible en ese momento. |
 | “Sesión vencida” | Hay que volver a iniciar sesión. |
 
 ---
@@ -312,11 +312,11 @@ El dueño no puede cambiarse su propio rol.
 
 Se cierran las sesiones abiertas de ese empleado.
 
-Si el dueño cambia su propia contraseña, el sistema lo redirige al login.
+Si el dueño cambia su propia contraseña, el sistema lo redirige al inicio de sesión.
 
 ### 7.4 Activar o desactivar
 
-- **Desactivar** impide el login de ese empleado y cierra sus sesiones.
+- **Desactivar** impide que ese empleado inicie sesión y cierra sus sesiones.
 - **Activar** lo habilita nuevamente.
 
 Los empleados no se borran: se desactivan para conservar sus ventas.
@@ -354,17 +354,17 @@ En el encabezado solo aparece **Ventas**. No puede entrar a caja, productos, sto
 
 - Revisar que el carrito no esté vacío.
 - Verificar stock.
-- Verificar que el backend esté funcionando.
+- Verificar que la aplicación esté funcionando.
 - Si la sesión venció, volver a entrar.
 
 ### El total no coincide con lo que calculé
 
-El total oficial lo calcula el backend. Si hay diferencias, revisar precios y cantidades cargadas.
+El total oficial lo calcula el sistema al cobrar. Si hay diferencias, revisar precios y cantidades cargadas.
 
 ### La pantalla quedó cargando
 
 - Recargar la página.
-- Verificar que el backend esté corriendo.
+- Verificar que la aplicación esté disponible.
 - Revisar la conexión.
 
 ### ¿Puedo borrar un producto o empleado?
@@ -383,8 +383,7 @@ No. Se desactivan para conservar las ventas históricas.
 | Detalle | Renglón de una venta. |
 | Precio unitario | Precio por unidad o por kilo al momento de la venta. |
 | Rol | Permisos del empleado. |
-| Sesión | Acceso abierto después del login. |
-| Seed | Datos de ejemplo iniciales. |
+| Sesión | Acceso abierto después de iniciar sesión. |
 
 ---
 
@@ -581,7 +580,7 @@ Para una simulación alcanza con un backup manual antes de cada demo importante.
 
 ---
 
-## 19. Endpoints principales
+## 19. Referencia técnica
 
 | Método y ruta | Rol | Función |
 |---|---|---|

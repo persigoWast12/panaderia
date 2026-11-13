@@ -116,7 +116,7 @@ strong { color: #292524; }
 <li>Backup y restore</li>
 <li>Solución de problemas</li>
 <li>Usuarios de prueba y límites</li>
-<li>Endpoints principales</li>
+<li>Referencia técnica</li>
 </ol>
 <hr>
 <h1>Parte 1 — Uso del sistema</h1>
@@ -143,7 +143,7 @@ strong { color: #292524; }
 <p>Abrir en el navegador:</p>
 <pre><code class="language-text">http://localhost:3000/login
 </code></pre>
-<p><img src="img/01-login.png" alt="Pantalla de login"></p>
+<p><img src="img/01-login.png" alt="Pantalla de inicio de sesión"></p>
 <ol>
 <li>Escribir el <strong>usuario</strong>.</li>
 <li>Escribir la <strong>contraseña</strong>.</li>
@@ -158,7 +158,7 @@ strong { color: #292524; }
 </ul>
 <p>Para cerrar sesión, usar el botón <strong>Cerrar sesión</strong> del encabezado.</p>
 <blockquote>
-<p><strong>Importante:</strong> si la sesión vence o se cierra desde otro lado, la próxima acción redirige al login.</p>
+<p><strong>Importante:</strong> si la sesión vence o se cierra desde otro lado, la próxima acción redirige al inicio de sesión.</p>
 </blockquote>
 <h3>Usuarios de prueba</h3>
 <table>
@@ -306,11 +306,11 @@ strong { color: #292524; }
 </li>
 <li>Tocar <strong>Cobrar</strong>.</li>
 </ol>
-<p>El backend calcula el total y descuenta el stock. Si no hay stock suficiente, no se guarda nada.</p>
+<p>El sistema calcula el total y descuenta el stock. Si no hay stock suficiente, no se registra la venta.</p>
 <p><img src="img/05-venta-confirmada.png" alt="Venta confirmada"></p>
 <p>El mensaje muestra el número de venta y el total registrado.</p>
 <blockquote>
-<p><strong>Importante:</strong> el total que muestra la pantalla es de referencia. El total oficial lo calcula el backend con los precios de la base.</p>
+<p><strong>Importante:</strong> el total que muestra la pantalla es de referencia. El total oficial lo calcula el sistema al cobrar, con los precios cargados.</p>
 </blockquote>
 <h3>4.6 Errores comunes en caja</h3>
 <table>
@@ -334,7 +334,7 @@ strong { color: #292524; }
 </tr>
 <tr>
 <td>“No se pudo conectar con el servidor…”</td>
-<td>El backend no responde.</td>
+<td>El sistema no está disponible en ese momento.</td>
 </tr>
 <tr>
 <td>“Sesión vencida”</td>
@@ -473,10 +473,10 @@ strong { color: #292524; }
 <li>Tocar <strong>Guardar</strong>.</li>
 </ol>
 <p>Se cierran las sesiones abiertas de ese empleado.</p>
-<p>Si el dueño cambia su propia contraseña, el sistema lo redirige al login.</p>
+<p>Si el dueño cambia su propia contraseña, el sistema lo redirige al inicio de sesión.</p>
 <h3>7.4 Activar o desactivar</h3>
 <ul>
-<li><strong>Desactivar</strong> impide el login de ese empleado y cierra sus sesiones.</li>
+<li><strong>Desactivar</strong> impide que ese empleado inicie sesión y cierra sus sesiones.</li>
 <li><strong>Activar</strong> lo habilita nuevamente.</li>
 </ul>
 <p>Los empleados no se borran: se desactivan para conservar sus ventas.</p>
@@ -505,15 +505,15 @@ strong { color: #292524; }
 <ul>
 <li>Revisar que el carrito no esté vacío.</li>
 <li>Verificar stock.</li>
-<li>Verificar que el backend esté funcionando.</li>
+<li>Verificar que la aplicación esté funcionando.</li>
 <li>Si la sesión venció, volver a entrar.</li>
 </ul>
 <h3>El total no coincide con lo que calculé</h3>
-<p>El total oficial lo calcula el backend. Si hay diferencias, revisar precios y cantidades cargadas.</p>
+<p>El total oficial lo calcula el sistema al cobrar. Si hay diferencias, revisar precios y cantidades cargadas.</p>
 <h3>La pantalla quedó cargando</h3>
 <ul>
 <li>Recargar la página.</li>
-<li>Verificar que el backend esté corriendo.</li>
+<li>Verificar que la aplicación esté disponible.</li>
 <li>Revisar la conexión.</li>
 </ul>
 <h3>¿Puedo borrar un producto o empleado?</h3>
@@ -553,11 +553,7 @@ strong { color: #292524; }
 </tr>
 <tr>
 <td>Sesión</td>
-<td>Acceso abierto después del login.</td>
-</tr>
-<tr>
-<td>Seed</td>
-<td>Datos de ejemplo iniciales.</td>
+<td>Acceso abierto después de iniciar sesión.</td>
 </tr>
 </tbody></table>
 <hr>
@@ -767,7 +763,7 @@ npm start
 </tr>
 </tbody></table>
 <hr>
-<h2>19. Endpoints principales</h2>
+<h2>19. Referencia técnica</h2>
 <table>
 <thead>
 <tr>
