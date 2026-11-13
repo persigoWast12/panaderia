@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Manual de uso — Sistema de Panadería</title>
+  <style>
+@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.45;
+  color: #292524;
+}
+h1 {
+  font-size: 21pt;
+  color: #7c2d12;
+  border-bottom: 2px solid #b45309;
+  padding-bottom: 5px;
+  margin-top: 0;
+  page-break-before: always;
+}
+h1:first-of-type { page-break-before: avoid; }
+h2 {
+  font-size: 14.5pt;
+  color: #92400e;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  page-break-after: avoid;
+}
+h3 {
+  font-size: 12pt;
+  color: #44403c;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  page-break-after: avoid;
+}
+p { margin: 5px 0; }
+ul, ol { margin: 5px 0 9px 20px; padding: 0; }
+li { margin: 2px 0; }
+img {
+  display: block;
+  max-width: 100%;
+  max-height: 145mm;
+  margin: 8px auto;
+  border: 1px solid #d6d3d1;
+  border-radius: 4px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 7px 0 10px;
+  font-size: 9.2pt;
+  page-break-inside: avoid;
+}
+th, td {
+  border: 1px solid #d6d3d1;
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #fef3c7; color: #78350f; }
+blockquote {
+  border-left: 4px solid #b45309;
+  background: #fffbeb;
+  margin: 8px 0;
+  padding: 6px 10px;
+  color: #57534e;
+  page-break-inside: avoid;
+}
+code {
+  background: #f5f5f4;
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 9pt;
+}
+pre {
+  background: #f5f5f4;
+  border: 1px solid #e7e5e4;
+  border-radius: 4px;
+  padding: 8px;
+  overflow-x: auto;
+  page-break-inside: avoid;
+}
+pre code { background: none; padding: 0; }
+hr { border: none; border-top: 1px solid #d6d3d1; margin: 14px 0; }
+strong { color: #292524; }
+</style>
+</head>
+<body>
+<h1>Manual de uso — Sistema de Panadería</h1>
+<p><strong>Versión:</strong> 1.0<br><strong>Fecha:</strong> 13/11/2026<br><strong>Tipo de sistema:</strong> simulación / MVP de gestión de panadería</p>
+<hr>
+<h2>Índice</h2>
+<p><strong>Parte 1 — Uso del sistema</strong></p>
+<ol>
+<li>Introducción</li>
+<li>Acceso al sistema</li>
+<li>Roles y permisos</li>
+<li>Caja</li>
+<li>Productos y stock</li>
+<li>Ventas</li>
+<li>Empleados</li>
+<li>Contador</li>
+<li>Preguntas frecuentes</li>
+<li>Glosario</li>
+</ol>
+<p><strong>Parte 2 — Administración técnica</strong></p>
+<ol start="11">
+<li>Arquitectura general</li>
+<li>Requisitos</li>
+<li>Instalación desde cero</li>
+<li>Arranque diario</li>
+<li>Reiniciar la base</li>
+<li>Backup y restore</li>
+<li>Solución de problemas</li>
+<li>Usuarios de prueba y límites</li>
+<li>Endpoints principales</li>
+</ol>
+<hr>
+<h1>Parte 1 — Uso del sistema</h1>
+<h2>1. Introducción</h2>
+<p>El Sistema de Panadería permite reemplazar el cuaderno de ventas y stock por una aplicación web.</p>
+<p>Sirve para:</p>
+<ul>
+<li>registrar ventas en el mostrador,</li>
+<li>consultar productos y stock,</li>
+<li>administrar productos,</li>
+<li>consultar las ventas del día,</li>
+<li>administrar empleados y contraseñas.</li>
+</ul>
+<p>Es una <strong>simulación</strong>: no requiere lector físico de códigos ni una PC especial de cobro. El código de barras se puede escribir a mano y confirmar con Enter.</p>
+<p>El sistema tiene cuatro roles:</p>
+<ul>
+<li><strong>Cajero:</strong> vende y consulta productos/stock.</li>
+<li><strong>Encargado:</strong> administra productos y stock.</li>
+<li><strong>Contador:</strong> solo consulta ventas.</li>
+<li><strong>Dueño:</strong> administra todo y además consulta ventas.</li>
+</ul>
+<hr>
+<h2>2. Acceso al sistema</h2>
+<p>Abrir en el navegador:</p>
+<pre><code class="language-text">http://localhost:3000/login
+</code></pre>
+<p><img src="img/01-login.png" alt="Pantalla de login"></p>
+<ol>
+<li>Escribir el <strong>usuario</strong>.</li>
+<li>Escribir la <strong>contraseña</strong>.</li>
+<li>Tocar <strong>Entrar</strong>.</li>
+</ol>
+<p>El sistema redirige automáticamente según el rol:</p>
+<ul>
+<li>cajero → Caja,</li>
+<li>encargado → Productos,</li>
+<li>contador → Ventas,</li>
+<li>dueño → Productos.</li>
+</ul>
+<p>Para cerrar sesión, usar el botón <strong>Cerrar sesión</strong> del encabezado.</p>
+<blockquote>
+<p><strong>Importante:</strong> si la sesión vence o se cierra desde otro lado, la próxima acción redirige al login.</p>
+</blockquote>
+<h3>Usuarios de prueba</h3>
+<table>
+<thead>
+<tr>
+<th>Usuario</th>
+<th>Contraseña</th>
+<th>Rol</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cajero1</code></td>
+<td><code>cajero123</code></td>
+<td>Cajero</td>
+</tr>
+<tr>
+<td><code>encargado1</code></td>
+<td><code>encargado123</code></td>
+<td>Encargado</td>
+</tr>
+<tr>
+<td><code>contador1</code></td>
+<td><code>contador123</code></td>
+<td>Contador</td>
+</tr>
+<tr>
+<td><code>dueno1</code></td>
+<td><code>dueno123</code></td>
+<td>Dueño</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Roles y permisos</h2>
+<table>
+<thead>
+<tr>
+<th>Acción</th>
+<th align="center">Cajero</th>
+<th align="center">Encargado</th>
+<th align="center">Contador</th>
+<th align="center">Dueño</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Iniciar sesión</td>
+<td align="center">Sí</td>
+<td align="center">Sí</td>
+<td align="center">Sí</td>
+<td align="center">Sí</td>
+</tr>
+<tr>
+<td>Vender en caja</td>
+<td align="center">Sí</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+</tr>
+<tr>
+<td>Consultar productos y stock</td>
+<td align="center">Sí</td>
+<td align="center">Sí</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+</tr>
+<tr>
+<td>Crear/editar productos</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+</tr>
+<tr>
+<td>Ajustar stock</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+</tr>
+<tr>
+<td>Consultar ventas</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+<td align="center">Sí</td>
+</tr>
+<tr>
+<td>Administrar empleados</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+</tr>
+<tr>
+<td>Resetear contraseñas</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Sí</td>
+</tr>
+</tbody></table>
+<p>El encabezado muestra solamente las secciones permitidas para el rol.</p>
+<hr>
+<h2>4. Caja</h2>
+<p>La pantalla de caja está disponible para el rol <strong>cajero</strong>.</p>
+<p><img src="img/02-caja-vacia.png" alt="Caja vacía"></p>
+<h3>4.1 Vender por código de barras</h3>
+<ol>
+<li>El cursor queda en el campo <strong>Código de barras</strong>.</li>
+<li>Escanear o escribir el código.</li>
+<li>Presionar <strong>Enter</strong>.</li>
+</ol>
+<p>El producto se agrega al carrito.</p>
+<h3>4.2 Vender por nombre</h3>
+<ol>
+<li>Escribir parte del nombre en <strong>Buscar por nombre</strong>.</li>
+<li>Esperar los resultados.</li>
+<li>Tocar <strong>Agregar</strong> en el producto correcto.</li>
+</ol>
+<h3>4.3 Vender por kilo</h3>
+<p>Cuando el producto se vende por peso, se abre un modal para ingresar los kilos.</p>
+<p><img src="img/03-modal-kg.png" alt="Modal de kilos"></p>
+<ol>
+<li>Escribir la cantidad en kilos. Se acepta coma o punto.</li>
+<li>Tocar <strong>Agregar</strong>.</li>
+</ol>
+<p>Ejemplo: <code>0,5</code> agrega medio kilo.</p>
+<h3>4.4 Carrito y total</h3>
+<p><img src="img/04-caja-carrito.png" alt="Carrito con productos"></p>
+<p>El carrito muestra:</p>
+<ul>
+<li>producto,</li>
+<li>cantidad,</li>
+<li>precio unitario,</li>
+<li>subtotal,</li>
+<li>total general.</li>
+</ul>
+<p>Para quitar un producto, usar <strong>Quitar</strong>.</p>
+<h3>4.5 Cobrar</h3>
+<ol>
+<li>Elegir la <strong>forma de pago</strong>:<ul>
+<li>Efectivo,</li>
+<li>Billetera virtual,</li>
+<li>Tarjeta.</li>
+</ul>
+</li>
+<li>Tocar <strong>Cobrar</strong>.</li>
+</ol>
+<p>El backend calcula el total y descuenta el stock. Si no hay stock suficiente, no se guarda nada.</p>
+<p><img src="img/05-venta-confirmada.png" alt="Venta confirmada"></p>
+<p>El mensaje muestra el número de venta y el total registrado.</p>
+<blockquote>
+<p><strong>Importante:</strong> el total que muestra la pantalla es de referencia. El total oficial lo calcula el backend con los precios de la base.</p>
+</blockquote>
+<h3>4.6 Errores comunes en caja</h3>
+<table>
+<thead>
+<tr>
+<th>Mensaje</th>
+<th>Qué significa</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“No existe un producto con el código…”</td>
+<td>El código no está cargado.</td>
+</tr>
+<tr>
+<td>“’Producto’ está inactivo.”</td>
+<td>El producto existe pero fue desactivado.</td>
+</tr>
+<tr>
+<td>“No hay stock suficiente…”</td>
+<td>La cantidad pedida supera el stock.</td>
+</tr>
+<tr>
+<td>“No se pudo conectar con el servidor…”</td>
+<td>El backend no responde.</td>
+</tr>
+<tr>
+<td>“Sesión vencida”</td>
+<td>Hay que volver a iniciar sesión.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Productos y stock</h2>
+<p>Disponible para <strong>encargado</strong> y <strong>dueño</strong>.</p>
+<p><img src="img/06-productos.png" alt="Productos y stock"></p>
+<h3>5.1 Crear un producto</h3>
+<ol>
+<li>Completar <strong>Nombre</strong>.</li>
+<li>Completar <strong>Código de barras</strong>.</li>
+<li>Elegir <strong>Unidad</strong>:<ul>
+<li>Por unidad,</li>
+<li>Por peso (kg).</li>
+</ul>
+</li>
+<li>Completar <strong>Precio</strong>.</li>
+<li>Completar <strong>Stock inicial</strong>.</li>
+<li>Tocar <strong>Crear producto</strong>.</li>
+</ol>
+<p>El código de barras no se puede repetir.</p>
+<h3>5.2 Editar un producto</h3>
+<ol>
+<li>Buscar el producto en la tabla.</li>
+<li>Tocar <strong>Editar</strong>.</li>
+</ol>
+<p><img src="img/07-editar-producto.png" alt="Editar producto"></p>
+<p>Se pueden cambiar:</p>
+<ul>
+<li>nombre,</li>
+<li>código,</li>
+<li>unidad,</li>
+<li>precio,</li>
+<li>estado activo/inactivo.</li>
+</ul>
+<p>La unidad no se puede cambiar si el producto ya tiene ventas.</p>
+<h3>5.3 Activar o desactivar</h3>
+<ul>
+<li><strong>Desactivar</strong> oculta el producto de la caja y de la lista de productos activos.</li>
+<li><strong>Activar</strong> lo vuelve a habilitar.</li>
+</ul>
+<p>Los productos no se borran: se desactivan para conservar el historial de ventas.</p>
+<h3>5.4 Ajustar stock</h3>
+<ol>
+<li>Tocar <strong>Stock</strong> en la fila del producto.</li>
+</ol>
+<p><img src="img/08-ajustar-stock.png" alt="Ajustar stock"></p>
+<ol start="2">
+<li>Escribir la cantidad disponible.</li>
+<li>Tocar <strong>Guardar stock</strong>.</li>
+</ol>
+<p>El ajuste es absoluto: “hay 30”, no “sumar 30”.</p>
+<h3>5.5 Límites</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th align="right">Mínimo</th>
+<th align="right">Máximo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Precio unitario</td>
+<td align="right"><code>0,01</code></td>
+<td align="right"><code>1.000.000,00</code></td>
+</tr>
+<tr>
+<td>Stock por producto</td>
+<td align="right"><code>0</code></td>
+<td align="right"><code>100.000,000</code></td>
+</tr>
+<tr>
+<td>Cantidad por ítem</td>
+<td align="right"><code>0,001</code> kg / <code>1</code> unidad</td>
+<td align="right"><code>10.000,000</code></td>
+</tr>
+<tr>
+<td>Total de una venta</td>
+<td align="right"><code>0</code></td>
+<td align="right"><code>10.000.000,00</code></td>
+</tr>
+</tbody></table>
+<p>Los productos por unidad no pueden tener stock fraccionario.</p>
+<hr>
+<h2>6. Ventas</h2>
+<p>Disponible para <strong>contador</strong> y <strong>dueño</strong>.</p>
+<p><img src="img/09-ventas.png" alt="Consulta de ventas"></p>
+<p>La pantalla muestra:</p>
+<ul>
+<li><strong>Total del día</strong>.</li>
+<li>Totales por forma de pago:<ul>
+<li>Efectivo,</li>
+<li>Billetera virtual,</li>
+<li>Tarjeta.</li>
+</ul>
+</li>
+<li>Lista de ventas con:<ul>
+<li>número,</li>
+<li>hora,</li>
+<li>forma de pago,</li>
+<li>total,</li>
+<li>detalle de productos.</li>
+</ul>
+</li>
+</ul>
+<p>Para cambiar de día, usar el selector <strong>Fecha</strong>.</p>
+<p>Si no hay ventas, aparece “No hay ventas registradas para esa fecha”.</p>
+<hr>
+<h2>7. Empleados</h2>
+<p>Disponible solo para el <strong>dueño</strong>.</p>
+<p><img src="img/10-empleados.png" alt="Empleados"></p>
+<h3>7.1 Crear empleado</h3>
+<ol>
+<li>Tocar <strong>Nuevo empleado</strong>.</li>
+<li>Completar nombre, usuario, rol y contraseña inicial.</li>
+<li>Tocar <strong>Guardar</strong>.</li>
+</ol>
+<p>La contraseña debe tener al menos 8 caracteres.</p>
+<h3>7.2 Editar empleado</h3>
+<ol>
+<li>Tocar <strong>Editar</strong> en la fila.</li>
+<li>Cambiar nombre, usuario o rol.</li>
+<li>Tocar <strong>Guardar</strong>.</li>
+</ol>
+<p>El dueño no puede cambiarse su propio rol.</p>
+<h3>7.3 Cambiar contraseña</h3>
+<ol>
+<li>Tocar <strong>Clave</strong> en la fila.</li>
+</ol>
+<p><img src="img/11-cambiar-password.png" alt="Cambiar contraseña"></p>
+<ol start="2">
+<li>Escribir la contraseña nueva.</li>
+<li>Tocar <strong>Guardar</strong>.</li>
+</ol>
+<p>Se cierran las sesiones abiertas de ese empleado.</p>
+<p>Si el dueño cambia su propia contraseña, el sistema lo redirige al login.</p>
+<h3>7.4 Activar o desactivar</h3>
+<ul>
+<li><strong>Desactivar</strong> impide el login de ese empleado y cierra sus sesiones.</li>
+<li><strong>Activar</strong> lo habilita nuevamente.</li>
+</ul>
+<p>Los empleados no se borran: se desactivan para conservar sus ventas.</p>
+<p>El dueño no puede desactivarse a sí mismo.</p>
+<hr>
+<h2>8. Contador</h2>
+<p>El contador solo puede consultar ventas.</p>
+<p><img src="img/12-contador.png" alt="Vista del contador"></p>
+<p>En el encabezado solo aparece <strong>Ventas</strong>. No puede entrar a caja, productos, stock ni empleados.</p>
+<hr>
+<h2>9. Preguntas frecuentes</h2>
+<h3>No puedo iniciar sesión</h3>
+<ul>
+<li>Verificar usuario y contraseña.</li>
+<li>Recordar que el usuario no distingue mayúsculas.</li>
+<li>Si el empleado está inactivo, el dueño debe activarlo.</li>
+<li>Si se olvidó la contraseña, el dueño debe resetearla.</li>
+</ul>
+<h3>No aparece un producto en la caja</h3>
+<ul>
+<li>Puede estar inactivo.</li>
+<li>Puede no tener stock.</li>
+<li>Verificar el código exacto.</li>
+</ul>
+<h3>No me deja cobrar</h3>
+<ul>
+<li>Revisar que el carrito no esté vacío.</li>
+<li>Verificar stock.</li>
+<li>Verificar que el backend esté funcionando.</li>
+<li>Si la sesión venció, volver a entrar.</li>
+</ul>
+<h3>El total no coincide con lo que calculé</h3>
+<p>El total oficial lo calcula el backend. Si hay diferencias, revisar precios y cantidades cargadas.</p>
+<h3>La pantalla quedó cargando</h3>
+<ul>
+<li>Recargar la página.</li>
+<li>Verificar que el backend esté corriendo.</li>
+<li>Revisar la conexión.</li>
+</ul>
+<h3>¿Puedo borrar un producto o empleado?</h3>
+<p>No. Se desactivan para conservar las ventas históricas.</p>
+<hr>
+<h2>10. Glosario</h2>
+<table>
+<thead>
+<tr>
+<th>Término</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Producto</td>
+<td>Artículo que se vende.</td>
+</tr>
+<tr>
+<td>Stock</td>
+<td>Cantidad disponible.</td>
+</tr>
+<tr>
+<td>Venta</td>
+<td>Operación de cobro con uno o más productos.</td>
+</tr>
+<tr>
+<td>Detalle</td>
+<td>Renglón de una venta.</td>
+</tr>
+<tr>
+<td>Precio unitario</td>
+<td>Precio por unidad o por kilo al momento de la venta.</td>
+</tr>
+<tr>
+<td>Rol</td>
+<td>Permisos del empleado.</td>
+</tr>
+<tr>
+<td>Sesión</td>
+<td>Acceso abierto después del login.</td>
+</tr>
+<tr>
+<td>Seed</td>
+<td>Datos de ejemplo iniciales.</td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Parte 2 — Administración técnica</h1>
+<h2>11. Arquitectura general</h2>
+<pre><code class="language-text">Navegador
+   │  http://localhost:3000
+   ▼
+Next.js (frontend)
+   │  /api/* → BACKEND_URL
+   ▼
+FastAPI (backend)
+   │
+   ▼
+PostgreSQL (base &quot;panaderia&quot;)
+</code></pre>
+<p>El navegador no llama directo al backend: Next reenvía <code>/api/*</code> a <code>http://127.0.0.1:8000</code>.</p>
+<hr>
+<h2>12. Requisitos</h2>
+<ul>
+<li>Python 3.13</li>
+<li>PostgreSQL 17</li>
+<li>Node.js 24</li>
+<li>Windows, PowerShell</li>
+</ul>
+<hr>
+<h2>13. Instalación desde cero</h2>
+<h3>13.1 Crear la base</h3>
+<p>La aplicación no crea la base, solo las tablas.</p>
+<pre><code class="language-powershell">$env:PGPASSWORD=&#39;TU_CLAVE&#39;
+&amp; &quot;C:\Program Files\PostgreSQL\17\bin\psql.exe&quot; -U postgres -h localhost `
+  -c &quot;CREATE DATABASE panaderia ENCODING &#39;UTF8&#39;&quot;
+</code></pre>
+<h3>13.2 Backend</h3>
+<pre><code class="language-powershell">cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+Copy-Item .env.example .env
+</code></pre>
+<p>Editar <code>backend/.env</code>:</p>
+<pre><code class="language-text">DATABASE_URL=postgresql+psycopg://postgres:TU_CLAVE@localhost:5432/panaderia
+COOKIE_SECURE=false
+SESSION_HOURS=12
+</code></pre>
+<h3>13.3 Frontend</h3>
+<pre><code class="language-powershell">cd frontend
+npm install
+</code></pre>
+<p>Opcional: copiar <code>frontend/.env.local.example</code> a <code>frontend/.env.local</code> y ajustar <code>BACKEND_URL</code>.</p>
+<h3>13.4 Arrancar</h3>
+<p>Backend:</p>
+<pre><code class="language-powershell">cd backend
+.\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000
+</code></pre>
+<p>Frontend, en otra terminal:</p>
+<pre><code class="language-powershell">cd frontend
+npm run dev
+</code></pre>
+<p>Abrir <code>http://localhost:3000/login</code>.</p>
+<blockquote>
+<p><strong>Nota:</strong> usar un solo worker del backend. El seed no está preparado para dos procesos arrancando a la vez.</p>
+</blockquote>
+<hr>
+<h2>14. Arranque diario</h2>
+<ol>
+<li>Verificar que PostgreSQL esté corriendo.</li>
+<li>Arrancar el backend.</li>
+<li>Arrancar el frontend.</li>
+<li>Abrir <code>http://localhost:3000/login</code>.</li>
+</ol>
+<p>Para la red local conviene compilar el frontend:</p>
+<pre><code class="language-powershell">cd frontend
+npm run build
+npm start
+</code></pre>
+<p>Next muestra la dirección de red, por ejemplo <code>http://192.168.0.245:3000</code>.</p>
+<hr>
+<h2>15. Reiniciar la base</h2>
+<p>El script <code>reset_db.py</code> borra las tablas, las vuelve a crear y carga el seed.</p>
+<pre><code class="language-powershell">cd backend
+.\.venv\Scripts\python.exe reset_db.py
+</code></pre>
+<p>Pide confirmación. Para una demo o script:</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe reset_db.py --yes
+</code></pre>
+<p>Resultado esperado:</p>
+<pre><code class="language-text">Resumen: 4 empleados, 10 productos, 0 ventas.
+</code></pre>
+<blockquote>
+<p><strong>Cuidado:</strong> borra todas las ventas y datos cargados. Usarlo solo en desarrollo o simulación.</p>
+</blockquote>
+<hr>
+<h2>16. Backup y restore</h2>
+<h3>Backup manual</h3>
+<pre><code class="language-powershell">$env:PGPASSWORD=&#39;TU_CLAVE&#39;
+&amp; &quot;C:\Program Files\PostgreSQL\17\bin\pg_dump.exe&quot; -U postgres -h localhost `
+  -Fc -f &quot;C:\backup\panaderia_2026-11-13.dump&quot; panaderia
+</code></pre>
+<h3>Restore</h3>
+<pre><code class="language-powershell">$env:PGPASSWORD=&#39;TU_CLAVE&#39;
+&amp; &quot;C:\Program Files\PostgreSQL\17\bin\pg_restore.exe&quot; -U postgres -h localhost `
+  -d panaderia --clean --if-exists &quot;C:\backup\panaderia_2026-11-13.dump&quot;
+</code></pre>
+<p>Para una simulación alcanza con un backup manual antes de cada demo importante.</p>
+<hr>
+<h2>17. Solución de problemas</h2>
+<table>
+<thead>
+<tr>
+<th>Problema</th>
+<th>Causa probable</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>El backend no arranca</td>
+<td>PostgreSQL apagado o <code>DATABASE_URL</code> mal</td>
+<td>Revisar <code>.env</code> y el servicio de PostgreSQL.</td>
+</tr>
+<tr>
+<td>“No se pudo conectar con el servidor”</td>
+<td>Backend apagado</td>
+<td>Arrancar uvicorn.</td>
+</tr>
+<tr>
+<td>El frontend no carga</td>
+<td><code>npm install</code> incompleto</td>
+<td>Ejecutar <code>npm install</code>.</td>
+</tr>
+<tr>
+<td>Puerto ocupado</td>
+<td>Otro proceso en 3000 u 8000</td>
+<td>Cerrar el proceso o cambiar el puerto.</td>
+</tr>
+<tr>
+<td>No aparece la extensión <code>unaccent</code></td>
+<td>Usuario sin permisos</td>
+<td>Usar el usuario <code>postgres</code> o crear la extensión a mano.</td>
+</tr>
+<tr>
+<td>La sesión se cierra</td>
+<td>Venció <code>SESSION_HOURS</code></td>
+<td>Volver a iniciar sesión.</td>
+</tr>
+<tr>
+<td>No se puede cambiar la unidad</td>
+<td>El producto ya tiene ventas</td>
+<td>Es una regla del sistema.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>18. Usuarios de prueba y límites</h2>
+<h3>Usuarios</h3>
+<table>
+<thead>
+<tr>
+<th>Usuario</th>
+<th>Contraseña</th>
+<th>Rol</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cajero1</code></td>
+<td><code>cajero123</code></td>
+<td>Cajero</td>
+</tr>
+<tr>
+<td><code>encargado1</code></td>
+<td><code>encargado123</code></td>
+<td>Encargado</td>
+</tr>
+<tr>
+<td><code>contador1</code></td>
+<td><code>contador123</code></td>
+<td>Contador</td>
+</tr>
+<tr>
+<td><code>dueno1</code></td>
+<td><code>dueno123</code></td>
+<td>Dueño</td>
+</tr>
+</tbody></table>
+<h3>Límites</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th align="right">Máximo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Precio</td>
+<td align="right"><code>$1.000.000,00</code></td>
+</tr>
+<tr>
+<td>Stock</td>
+<td align="right"><code>100.000,000</code></td>
+</tr>
+<tr>
+<td>Cantidad por ítem</td>
+<td align="right"><code>10.000,000</code></td>
+</tr>
+<tr>
+<td>Total de venta</td>
+<td align="right"><code>$10.000.000,00</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>19. Endpoints principales</h2>
+<table>
+<thead>
+<tr>
+<th>Método y ruta</th>
+<th>Rol</th>
+<th>Función</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET /test</code></td>
+<td>público</td>
+<td>Verifica backend y base.</td>
+</tr>
+<tr>
+<td><code>POST /login</code></td>
+<td>público</td>
+<td>Inicia sesión.</td>
+</tr>
+<tr>
+<td><code>POST /logout</code></td>
+<td>autenticado</td>
+<td>Cierra sesión.</td>
+</tr>
+<tr>
+<td><code>GET /me</code></td>
+<td>autenticado</td>
+<td>Datos del usuario actual.</td>
+</tr>
+<tr>
+<td><code>GET /productos?q=</code></td>
+<td>cajero, encargado, dueño</td>
+<td>Lista productos activos.</td>
+</tr>
+<tr>
+<td><code>GET /productos/codigo/{codigo}</code></td>
+<td>cajero, encargado, dueño</td>
+<td>Busca por código.</td>
+</tr>
+<tr>
+<td><code>POST /productos</code></td>
+<td>encargado, dueño</td>
+<td>Crea producto.</td>
+</tr>
+<tr>
+<td><code>PUT /productos/{id}</code></td>
+<td>encargado, dueño</td>
+<td>Edita producto.</td>
+</tr>
+<tr>
+<td><code>GET /stock</code></td>
+<td>cajero, encargado, dueño</td>
+<td>Lista stock.</td>
+</tr>
+<tr>
+<td><code>PUT /stock/{id}</code></td>
+<td>encargado, dueño</td>
+<td>Ajusta stock.</td>
+</tr>
+<tr>
+<td><code>POST /ventas</code></td>
+<td>cajero</td>
+<td>Registra venta.</td>
+</tr>
+<tr>
+<td><code>GET /ventas?fecha=</code></td>
+<td>contador, dueño</td>
+<td>Consulta ventas.</td>
+</tr>
+<tr>
+<td><code>GET /empleados</code></td>
+<td>dueño</td>
+<td>Lista empleados.</td>
+</tr>
+<tr>
+<td><code>POST /empleados</code></td>
+<td>dueño</td>
+<td>Crea empleado.</td>
+</tr>
+<tr>
+<td><code>PUT /empleados/{id}</code></td>
+<td>dueño</td>
+<td>Edita empleado.</td>
+</tr>
+<tr>
+<td><code>PUT /empleados/{id}/password</code></td>
+<td>dueño</td>
+<td>Resetea contraseña.</td>
+</tr>
+<tr>
+<td><code>GET /docs</code></td>
+<td>público</td>
+<td>Documentación automática.</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>Fin del manual.</strong></p>
+
+</body>
+</html>

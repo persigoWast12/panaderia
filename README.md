@@ -326,6 +326,12 @@ Para cambiar el destino del backend, copiar `frontend/.env.local.example` a `fro
 
 El header muestra el nombre y el rol, y solo ofrece las secciones permitidas.
 
+### Manual de uso
+
+- `manual/manual-de-uso.md`: fuente editable.
+- `manual/manual-de-uso.pdf`: versión para leer o imprimir.
+- `manual/img/`: capturas usadas en el manual.
+
 ## Pruebas
 
 Las pruebas usan PostgreSQL, igual que la aplicación, contra una base aparte (`panaderia_test`) para no tocar los datos de desarrollo.
@@ -389,6 +395,7 @@ panaderia/
 │   ├── next.config.mjs    # rewrite de /api
 │   ├── package.json
 │   └── .env.local.example
+├── manual/                # manual de uso y capturas
 ├── docs/                  # documentación personal (ignorada por git)
 ├── .gitignore
 └── README.md
