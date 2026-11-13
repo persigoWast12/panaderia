@@ -90,7 +90,7 @@ strong { color: #292524; }
 </head>
 <body>
 <h1>Manual de uso — Sistema de Panadería</h1>
-<p><strong>Versión:</strong> 1.0<br><strong>Fecha:</strong> 13/11/2026<br><strong>Tipo de sistema:</strong> simulación / MVP de gestión de panadería</p>
+<p><strong>Versión:</strong> 1.0<br><strong>Fecha:</strong> 13/11/2026<br><strong>Tipo de sistema:</strong> aplicación web de gestión de panadería</p>
 <hr>
 <h2>Índice</h2>
 <p><strong>Parte 1 — Uso del sistema</strong></p>
@@ -130,7 +130,7 @@ strong { color: #292524; }
 <li>consultar las ventas del día,</li>
 <li>administrar empleados y contraseñas.</li>
 </ul>
-<p>Es una <strong>simulación</strong>: no requiere lector físico de códigos ni una PC especial de cobro. El código de barras se puede escribir a mano y confirmar con Enter.</p>
+<p>El sistema admite lector de códigos de barras y también ingreso manual. El código se puede escribir a mano y confirmar con Enter.</p>
 <p>El sistema tiene cuatro roles:</p>
 <ul>
 <li><strong>Cajero:</strong> vende y consulta productos/stock.</li>
@@ -644,7 +644,7 @@ npm start
 <pre><code class="language-text">Resumen: 4 empleados, 10 productos, 0 ventas.
 </code></pre>
 <blockquote>
-<p><strong>Cuidado:</strong> borra todas las ventas y datos cargados. Usarlo solo en desarrollo o simulación.</p>
+<p><strong>Cuidado:</strong> borra todas las ventas y datos cargados. Usarlo solo en entornos de prueba.</p>
 </blockquote>
 <hr>
 <h2>16. Backup y restore</h2>
@@ -658,7 +658,7 @@ npm start
 &amp; &quot;C:\Program Files\PostgreSQL\17\bin\pg_restore.exe&quot; -U postgres -h localhost `
   -d panaderia --clean --if-exists &quot;C:\backup\panaderia_2026-11-13.dump&quot;
 </code></pre>
-<p>Para una simulación alcanza con un backup manual antes de cada demo importante.</p>
+<p>Para el volumen de una panadería de barrio, un backup manual antes de cada jornada importante es suficiente.</p>
 <hr>
 <h2>17. Solución de problemas</h2>
 <table>

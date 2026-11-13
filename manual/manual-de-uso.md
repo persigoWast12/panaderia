@@ -2,7 +2,7 @@
 
 **Versión:** 1.0  
 **Fecha:** 13/11/2026  
-**Tipo de sistema:** simulación / MVP de gestión de panadería
+**Tipo de sistema:** aplicación web de gestión de panadería
 
 ---
 
@@ -49,7 +49,7 @@ Sirve para:
 - consultar las ventas del día,
 - administrar empleados y contraseñas.
 
-Es una **simulación**: no requiere lector físico de códigos ni una PC especial de cobro. El código de barras se puede escribir a mano y confirmar con Enter.
+El sistema admite lector de códigos de barras y también ingreso manual. El código se puede escribir a mano y confirmar con Enter.
 
 El sistema tiene cuatro roles:
 
@@ -518,7 +518,7 @@ Resultado esperado:
 Resumen: 4 empleados, 10 productos, 0 ventas.
 ```
 
-> **Cuidado:** borra todas las ventas y datos cargados. Usarlo solo en desarrollo o simulación.
+> **Cuidado:** borra todas las ventas y datos cargados. Usarlo solo en entornos de prueba.
 
 ---
 
@@ -540,7 +540,7 @@ $env:PGPASSWORD='TU_CLAVE'
   -d panaderia --clean --if-exists "C:\backup\panaderia_2026-11-13.dump"
 ```
 
-Para una simulación alcanza con un backup manual antes de cada demo importante.
+Para el volumen de una panadería de barrio, un backup manual antes de cada jornada importante es suficiente.
 
 ---
 

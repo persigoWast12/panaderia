@@ -1,4 +1,4 @@
-# Panadería — MVP
+# Panadería — Sistema de gestión
 
 Sistema de gestión para una panadería de barrio: login por roles, productos con stock, registro de ventas en el mostrador, consulta de ventas y administración de empleados. Reemplaza el cuaderno de ventas y stock.
 
@@ -410,5 +410,5 @@ panaderia/
 - Los roles se agregaron recreando las tablas, porque todavía no había datos reales. Si más adelante cambia el modelo y hay ventas que conservar, hay que migrar a mano o incorporar Alembic.
 - El backend y el frontend tienen que correr en la misma PC: el navegador habla con Next y Next reenvía a `127.0.0.1:8000`.
 - Para el uso real, cambiar la contraseña de `dueno1` y desactivar `cajero1`, `encargado1` y `contador1` desde la pantalla de empleados.
-- **Backup recomendado**: programar un `pg_dump` diario de la base `panaderia` (por ejemplo, con el Programador de tareas de Windows). El MVP no incluye respaldos automáticos.
+- **Backup recomendado**: programar un `pg_dump` diario de la base `panaderia` (por ejemplo, con el Programador de tareas de Windows). La versión actual no incluye respaldos automáticos.
 - La carpeta `docs/` es de uso personal y está excluida del repositorio.
