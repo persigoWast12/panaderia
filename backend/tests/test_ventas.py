@@ -1,13 +1,15 @@
 """Pruebas del registro y la consulta de ventas."""
 
 import threading
+from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from main import app
-from models import Venta
+from models import DetalleVenta, Venta
 
 PRODUCTO = {
     "nombre": "Producto de prueba",
@@ -272,3 +274,115 @@ def test_dos_ventas_simultaneas_no_dejan_stock_negativo(client, login):
 
     assert sorted(resultados) == [201, 400]
     assert stock_de(client, producto["id"])["cantidad_disponible"] == 0.0
+
+
+def test_cantidad_maxima_por_item(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = client.post(
+        "/productos",
+        json={
+            "nombre": "Producto por kilo grande",
+            "codigo_barras": "3000000000065",
+            "unidad": "kg",
+            "precio": 1,
+            "cantidad_inicial": 20000,
+        },
+    ).json()
+
+    client.cookies.clear()
+    login(client, "cajero1", "cajero123")
+
+    excedida = client.post(
+        "/ventas",
+        json={
+            "forma_pago": "efectivo",
+            "items": [
+                {"producto_id": producto["id"], "cantidad": 10000.001}
+            ],
+        },
+    )
+    assert excedida.status_code == 422
+
+    valida = client.post(
+        "/ventas",
+        json={
+            "forma_pago": "efectivo",
+            "items": [{"producto_id": producto["id"], "cantidad": 10000}],
+        },
+    )
+    assert valida.status_code == 201
+    assert valida.json()["total"] == 10000.0
+
+
+def test_total_maximo_de_venta(client, login, db):
+    login(client, "encargado1", "encargado123")
+    producto = client.post(
+        "/productos",
+        json={
+            "nombre": "Producto de un millón",
+            "codigo_barras": "3000000000072",
+            "unidad": "unidad",
+            "precio": 1000000,
+            "cantidad_inicial": 20,
+        },
+    ).json()
+
+    client.cookies.clear()
+    login(client, "cajero1", "cajero123")
+    ventas_antes = db.scalar(select(func.count()).select_from(Venta))
+
+    excedida = client.post(
+        "/ventas",
+        json={
+            "forma_pago": "efectivo",
+            "items": [{"producto_id": producto["id"], "cantidad": 11}],
+        },
+    )
+    assert excedida.status_code == 400
+    assert "máximo" in excedida.json()["detail"]
+    assert stock_de(client, producto["id"])["cantidad_disponible"] == 20.0
+    assert db.scalar(select(func.count()).select_from(Venta)) == ventas_antes
+
+    valida = client.post(
+        "/ventas",
+        json={
+            "forma_pago": "efectivo",
+            "items": [{"producto_id": producto["id"], "cantidad": 10}],
+        },
+    )
+    assert valida.status_code == 201
+    assert valida.json()["total"] == 10000000.0
+    assert stock_de(client, producto["id"])["cantidad_disponible"] == 10.0
+
+
+def test_constraint_de_cantidad_maxima(db):
+    venta = Venta(
+        empleado_id=1,
+        forma_pago="efectivo",
+        total=Decimal("1"),
+    )
+    venta.detalles.append(
+        DetalleVenta(
+            producto_id=1,
+            cantidad=Decimal("10000.001"),
+            precio_unitario=Decimal("1"),
+        )
+    )
+    db.add(venta)
+
+    with pytest.raises(IntegrityError):
+        db.commit()
+    db.rollback()
+
+
+def test_constraint_de_total_maximo(db):
+    venta = Venta(
+        empleado_id=1,
+        forma_pago="efectivo",
+        total=Decimal("10000000.01"),
+    )
+    db.add(venta)
+
+    with pytest.raises(IntegrityError):
+        db.commit()
+    db.rollback()

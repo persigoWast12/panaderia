@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -77,6 +78,16 @@ def actualizar_stock(
     if producto is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado.")
 
+    if (
+        producto.unidad == "unidad"
+        and datos.cantidad_disponible
+        != datos.cantidad_disponible.to_integral_value()
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="El stock de un producto por unidad debe ser entero.",
+        )
+
     # El bloqueo evita que un ajuste pise el descuento de una venta simultánea.
     stock = db.scalar(
         select(Stock)
@@ -93,7 +104,13 @@ def actualizar_stock(
     tiene_ventas = bool(db.scalar(select(_tiene_ventas(producto_id))))
 
     stock.cantidad_disponible = datos.cantidad_disponible
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400, detail="No se pudo actualizar el stock."
+        ) from None
     db.refresh(stock)
 
     return _stock_out(producto, stock.cantidad_disponible, tiene_ventas)

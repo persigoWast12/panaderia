@@ -25,6 +25,7 @@ def test_listar_empleados(client, login):
     assert {empleado["usuario"] for empleado in empleados} == {
         "cajero1",
         "encargado1",
+        "contador1",
         "dueno1",
     }
     assert all("password_hash" not in empleado for empleado in empleados)
@@ -37,7 +38,7 @@ def test_crear_empleado_y_entrar(client, login):
         "/empleados",
         json={
             "nombre": "Contador de prueba",
-            "usuario": "contador1",
+            "usuario": "contador_prueba",
             "rol": "contador",
             "password": "contador123",
         },
@@ -45,12 +46,12 @@ def test_crear_empleado_y_entrar(client, login):
     assert respuesta.status_code == 201
 
     datos = respuesta.json()
-    assert datos["usuario"] == "contador1"
+    assert datos["usuario"] == "contador_prueba"
     assert datos["rol"] == "contador"
     assert datos["activo"] is True
 
     client.cookies.clear()
-    login(client, "contador1", "contador123")
+    login(client, "contador_prueba", "contador123")
     assert client.get("/me").json()["rol"] == "contador"
 
 

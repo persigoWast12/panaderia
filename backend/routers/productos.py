@@ -15,6 +15,37 @@ from security import require_rol
 router = APIRouter(tags=["Productos"])
 
 MENSAJE_CODIGO_REPETIDO = "Ya existe un producto con ese código de barras."
+MENSAJE_LIMITE = "El precio o el stock superan el máximo permitido."
+
+
+def _escapar_like(texto: str) -> str:
+    """Escapa los comodines de LIKE para buscar el texto literal.
+
+    Si el usuario busca "%" o "_", no queremos que actúen como comodines.
+    """
+    return (
+        texto.replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_")
+    )
+
+
+def _mensaje_integridad(error: IntegrityError) -> str:
+    """Traduce un error de constraint a un mensaje para el usuario.
+
+    No todos los IntegrityError son códigos repetidos: también pueden venir
+    de los CHECK de precio y stock.
+    """
+    constraint = getattr(
+        getattr(error.orig, "diag", None), "constraint_name", ""
+    ) or ""
+    texto = str(error.orig)
+
+    if constraint == "producto_codigo_barras_key" or "duplicate key" in texto:
+        return MENSAJE_CODIGO_REPETIDO
+    if constraint in ("ck_producto_precio_max", "ck_stock_cantidad_max"):
+        return MENSAJE_LIMITE
+    return "No se pudo guardar el producto."
 
 
 def _producto_out(producto: Producto) -> dict:
@@ -58,7 +89,12 @@ def listar_productos(
         .order_by(Producto.nombre)
     )
     if q and q.strip():
-        consulta = consulta.where(Producto.nombre.ilike(f"%{q.strip()}%"))
+        patron = f"%{_escapar_like(q.strip())}%"
+        consulta = consulta.where(
+            func.unaccent(Producto.nombre).ilike(
+                func.unaccent(patron), escape="\\"
+            )
+        )
 
     productos = db.scalars(consulta).all()
     return [_producto_out(producto) for producto in productos]
@@ -121,10 +157,10 @@ def crear_producto(
     db.add(producto)
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as error:
         db.rollback()
         raise HTTPException(
-            status_code=400, detail=MENSAJE_CODIGO_REPETIDO
+            status_code=400, detail=_mensaje_integridad(error)
         ) from None
 
     db.refresh(producto)
@@ -167,6 +203,17 @@ def actualizar_producto(
             raise HTTPException(status_code=400, detail=MENSAJE_CODIGO_REPETIDO)
 
     if "unidad" in cambios and cambios["unidad"] != producto.unidad:
+        if cambios["unidad"] == "unidad" and producto.stock is not None:
+            cantidad = producto.stock.cantidad_disponible
+            if cantidad != cantidad.to_integral_value():
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Ajustá el stock a un número entero antes de cambiar "
+                        "la unidad."
+                    ),
+                )
+
         ventas = db.scalar(
             select(func.count())
             .select_from(DetalleVenta)
@@ -186,10 +233,10 @@ def actualizar_producto(
 
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as error:
         db.rollback()
         raise HTTPException(
-            status_code=400, detail=MENSAJE_CODIGO_REPETIDO
+            status_code=400, detail=_mensaje_integridad(error)
         ) from None
 
     db.refresh(producto)

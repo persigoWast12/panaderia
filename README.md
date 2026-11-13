@@ -93,6 +93,7 @@ Hay que correr **un solo worker**. Con dos procesos, los dos podrían intentar c
 |---|---|---|
 | `cajero1` | `cajero123` | cajero |
 | `encargado1` | `encargado123` | encargado |
+| `contador1` | `contador123` | contador |
 | `dueno1` | `dueno123` | dueño |
 
 Las contraseñas se guardan con hash bcrypt; las de la tabla son solo para desarrollo.
@@ -192,8 +193,37 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/stock/11 -Method Put `
 - `GET /productos` solo muestra productos activos.
 - `GET /stock` muestra todos, con `activo`, `precio` y `tiene_ventas`.
 - `GET /productos/codigo/{codigo}` devuelve también productos inactivos.
+- La búsqueda por nombre ignora acentos (`budin` encuentra `Budín`) y trata `%` y `_` como texto literal.
 - El código de barras no se puede repetir.
 - La unidad solo se puede corregir si el producto todavía no tiene ventas.
+
+### Límites de precio, stock y ventas
+
+Los topes se validan en la API, en el frontend y con `CHECK` en PostgreSQL:
+
+| Campo | Mínimo | Máximo |
+|---|---:|---:|
+| Precio unitario | `0,01` | `1.000.000,00` |
+| Stock por producto | `0` | `100.000,000` |
+| Cantidad por ítem | `0,001` kg / `1` unidad | `10.000,000` |
+| Total de una venta | `0` | `10.000.000,00` |
+
+Además, un producto con `unidad = "unidad"` **no puede tener stock fraccionario**. Si se cambia la unidad de `kg` a `unidad`, el stock actual tiene que ser entero.
+
+Como `create_all` no modifica tablas existentes, al cambiar los modelos hay que recrear las tablas. Para volver al estado inicial (borra todo y carga el seed):
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe reset_db.py
+```
+
+El script pide confirmación. Para usarlo en una demo o script sin preguntar:
+
+```powershell
+.\.venv\Scripts\python.exe reset_db.py --yes
+```
+
+Después se arranca el backend normalmente: `create_all` crea las tablas nuevas y el seed vuelve a cargar los datos porque la base queda vacía.
 
 ### Ventas
 
@@ -241,13 +271,13 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/login -Method Post `
 # Listar empleados
 Invoke-RestMethod -Uri http://127.0.0.1:8000/empleados -WebSession $sesion
 
-# Crear un contador
+# Crear otro contador
 Invoke-RestMethod -Uri http://127.0.0.1:8000/empleados -Method Post `
   -WebSession $sesion -ContentType "application/json" `
-  -Body '{"nombre":"Contador","usuario":"contador1","rol":"contador","password":"contador123"}'
+  -Body '{"nombre":"Contador 2","usuario":"contador2","rol":"contador","password":"contador123"}'
 
 # Resetear una contraseña (usá el id que devolvió la lista o la creación)
-Invoke-RestMethod -Uri http://127.0.0.1:8000/empleados/4/password -Method Put `
+Invoke-RestMethod -Uri http://127.0.0.1:8000/empleados/5/password -Method Put `
   -WebSession $sesion -ContentType "application/json" `
   -Body '{"password":"nueva123"}'
 ```
@@ -316,7 +346,7 @@ $env:TEST_DATABASE_URL="postgresql+psycopg://postgres:TU_CLAVE@localhost:5432/pa
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Son **42 pruebas** y cubren login y sesiones, los cuatro roles, productos y stock, ventas (incluida una prueba de dos ventas simultáneas) y administración de empleados.
+Son **56 pruebas** y cubren login y sesiones, los cuatro roles, productos y stock, ventas (incluida una prueba de dos ventas simultáneas), límites de precio/stock/cantidad y administración de empleados.
 
 ## Estructura
 
@@ -342,6 +372,7 @@ panaderia/
 │   │   ├── test_ventas.py
 │   │   └── test_empleados.py
 │   ├── seed.py            # datos de ejemplo
+│   ├── reset_db.py        # borra tablas y vuelve a cargar el seed
 │   ├── requirements.txt
 │   ├── requirements-dev.txt
 │   └── .env.example
@@ -365,11 +396,12 @@ panaderia/
 
 ## Notas
 
-- **No se usa Alembic.** Si cambia el modelo de datos, hay que borrar las tablas y dejar que `create_all` las vuelva a crear.
+- **No se usa Alembic.** Si cambia el modelo de datos, hay que borrar las tablas y dejar que `create_all` las vuelva a crear. Los topes de precio, stock y total están definidos como `CHECK` en el modelo y en los esquemas Pydantic.
+- La búsqueda por nombre usa la extensión **`unaccent`** de PostgreSQL. La aplicación ejecuta `CREATE EXTENSION IF NOT EXISTS unaccent` al arrancar; el usuario de la base tiene que tener permiso para crear extensiones (con `postgres` funciona).
 - Las fechas de venta se guardan en **hora local**, sin zona horaria, porque el sistema corre en una sola sucursal.
 - Los productos y empleados no se borran: se desactivan con `activo = false`.
 - Los roles se agregaron recreando las tablas, porque todavía no había datos reales. Si más adelante cambia el modelo y hay ventas que conservar, hay que migrar a mano o incorporar Alembic.
 - El backend y el frontend tienen que correr en la misma PC: el navegador habla con Next y Next reenvía a `127.0.0.1:8000`.
-- Para el uso real, cambiar la contraseña de `dueno1` y desactivar `cajero1` y `encargado1` desde la pantalla de empleados.
+- Para el uso real, cambiar la contraseña de `dueno1` y desactivar `cajero1`, `encargado1` y `contador1` desde la pantalla de empleados.
 - **Backup recomendado**: programar un `pg_dump` diario de la base `panaderia` (por ejemplo, con el Programador de tareas de Windows). El MVP no incluye respaldos automáticos.
 - La carpeta `docs/` es de uso personal y está excluida del repositorio.

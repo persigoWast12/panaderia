@@ -16,6 +16,7 @@ from security import hash_password
 # Contraseñas de desarrollo. Se documentan en el README; en la base va solo el hash.
 PASSWORD_CAJERO = "cajero123"
 PASSWORD_ENCARGADO = "encargado123"
+PASSWORD_CONTADOR = "contador123"
 PASSWORD_DUENO = "dueno123"
 
 
@@ -52,6 +53,13 @@ def cargar_datos_iniciales(db: Session) -> bool:
                     rol="encargado",
                     usuario="encargado1",
                     password_hash=hash_password(PASSWORD_ENCARGADO),
+                    activo=True,
+                ),
+                Empleado(
+                    nombre="Contador de prueba",
+                    rol="contador",
+                    usuario="contador1",
+                    password_hash=hash_password(PASSWORD_CONTADOR),
                     activo=True,
                 ),
                 Empleado(

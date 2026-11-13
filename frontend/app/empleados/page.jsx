@@ -102,12 +102,17 @@ export default function Empleados() {
     evento.preventDefault();
     setErrorModal("");
 
-    if (!formulario.nombre.trim() || !formulario.usuario.trim()) {
-      setErrorModal("Completá el nombre y el usuario.");
-      return;
+    if (modo !== "password") {
+      if (!formulario.nombre.trim() || !formulario.usuario.trim()) {
+        setErrorModal("Completá el nombre y el usuario.");
+        return;
+      }
     }
 
-    if (modo !== "editar" && formulario.password.length < 8) {
+    if (
+      (modo === "crear" || modo === "password") &&
+      formulario.password.length < 8
+    ) {
       setErrorModal("La contraseña tiene que tener al menos 8 caracteres.");
       return;
     }

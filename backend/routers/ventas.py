@@ -5,11 +5,12 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from database import get_db
 from models import DetalleVenta, Empleado, Producto, Stock, Venta
-from schemas import VentaIn, VentaOut
+from schemas import TOTAL_MAX, VentaIn, VentaOut
 from security import require_rol
 
 router = APIRouter(tags=["Ventas"])
@@ -148,21 +149,31 @@ def crear_venta(
                     ),
                 )
 
-        venta = Venta(
-            empleado_id=empleado.id,
-            fecha_hora=datetime.now(),
-            forma_pago=datos.forma_pago,
-            total=Decimal("0"),
-        )
-
-        # Se copia el precio actual a cada renglón: si mañana cambia el
-        # precio del producto, la venta vieja conserva el valor original.
+        # Calcular el total antes de escribir nada.
         total = Decimal("0")
         for producto_id in ids:
             producto = productos_por_id[producto_id]
             cantidad = cantidades[producto_id]
-            subtotal = _subtotal(cantidad, producto.precio)
-            total += subtotal
+            total += _subtotal(cantidad, producto.precio)
+
+        if total > TOTAL_MAX:
+            raise HTTPException(
+                status_code=400,
+                detail="El total de la venta supera el máximo permitido.",
+            )
+
+        venta = Venta(
+            empleado_id=empleado.id,
+            fecha_hora=datetime.now(),
+            forma_pago=datos.forma_pago,
+            total=total,
+        )
+
+        # Se copia el precio actual a cada renglón: si mañana cambia el
+        # precio del producto, la venta vieja conserva el valor original.
+        for producto_id in ids:
+            producto = productos_por_id[producto_id]
+            cantidad = cantidades[producto_id]
             venta.detalles.append(
                 DetalleVenta(
                     producto_id=producto_id,
@@ -172,12 +183,16 @@ def crear_venta(
             )
             stocks_por_id[producto_id].cantidad_disponible -= cantidad
 
-        venta.total = total
         db.add(venta)
         db.commit()
     except HTTPException:
         db.rollback()
         raise
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400, detail="No se pudo registrar la venta."
+        ) from None
     except Exception:
         db.rollback()
         raise

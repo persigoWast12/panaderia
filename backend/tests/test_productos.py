@@ -1,5 +1,12 @@
 """Pruebas de productos y stock."""
 
+from decimal import Decimal
+
+import pytest
+from sqlalchemy.exc import IntegrityError
+
+from models import Producto, Stock
+
 PRODUCTO = {
     "nombre": "Pan de prueba",
     "codigo_barras": "3000000000010",
@@ -97,15 +104,166 @@ def test_actualizar_stock(client, login):
     producto = crear_producto(client, cantidad_inicial=5).json()
 
     respuesta = client.put(
-        f"/stock/{producto['id']}", json={"cantidad_disponible": 12.5}
+        f"/stock/{producto['id']}", json={"cantidad_disponible": 12}
     )
     assert respuesta.status_code == 200
-    assert respuesta.json()["cantidad_disponible"] == 12.5
+    assert respuesta.json()["cantidad_disponible"] == 12.0
 
     negativa = client.put(
         f"/stock/{producto['id']}", json={"cantidad_disponible": -1}
     )
     assert negativa.status_code == 422
+
+
+def test_actualizar_stock_decimal_en_producto_por_kg(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = crear_producto(
+        client, unidad="kg", cantidad_inicial=5
+    ).json()
+
+    respuesta = client.put(
+        f"/stock/{producto['id']}", json={"cantidad_disponible": 12.5}
+    )
+    assert respuesta.status_code == 200
+    assert respuesta.json()["cantidad_disponible"] == 12.5
+
+
+def test_stock_fraccionario_en_producto_por_unidad(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = crear_producto(client, cantidad_inicial=5).json()
+
+    respuesta = client.put(
+        f"/stock/{producto['id']}", json={"cantidad_disponible": 12.5}
+    )
+    assert respuesta.status_code == 400
+    assert "entero" in respuesta.json()["detail"]
+
+
+def test_limites_de_precio_y_stock(client, login):
+    login(client, "encargado1", "encargado123")
+
+    en_limite = crear_producto(
+        client,
+        codigo_barras="3000000000027",
+        precio=1000000,
+        cantidad_inicial=100000,
+    )
+    assert en_limite.status_code == 201
+
+    precio_excedido = crear_producto(
+        client,
+        codigo_barras="3000000000034",
+        precio=1000000.01,
+    )
+    assert precio_excedido.status_code == 422
+
+    stock_excedido = crear_producto(
+        client,
+        codigo_barras="3000000000041",
+        unidad="kg",
+        cantidad_inicial=100000.001,
+    )
+    assert stock_excedido.status_code == 422
+
+
+def test_precio_maximo_en_edicion(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = crear_producto(client).json()
+
+    respuesta = client.put(
+        f"/productos/{producto['id']}", json={"precio": 1000000.01}
+    )
+    assert respuesta.status_code == 422
+
+
+def test_no_cambiar_a_unidad_con_stock_fraccionario(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = crear_producto(
+        client, unidad="kg", cantidad_inicial=2.5
+    ).json()
+
+    respuesta = client.put(
+        f"/productos/{producto['id']}", json={"unidad": "unidad"}
+    )
+    assert respuesta.status_code == 400
+    assert "entero" in respuesta.json()["detail"]
+
+    assert (
+        client.put(
+            f"/stock/{producto['id']}", json={"cantidad_disponible": 2}
+        ).status_code
+        == 200
+    )
+
+    respuesta = client.put(
+        f"/productos/{producto['id']}", json={"unidad": "unidad"}
+    )
+    assert respuesta.status_code == 200
+    assert respuesta.json()["unidad"] == "unidad"
+
+
+def test_producto_por_unidad_rechaza_stock_fraccionario_al_crear(
+    client, login
+):
+    login(client, "encargado1", "encargado123")
+
+    respuesta = crear_producto(
+        client, cantidad_inicial=2.5, codigo_barras="3000000000058"
+    )
+    assert respuesta.status_code == 422
+
+
+def test_constraint_de_precio_maximo(db):
+    producto = Producto(
+        nombre="Precio excedido",
+        codigo_barras="3999999999991",
+        unidad="unidad",
+        precio=Decimal("1000000.01"),
+        stock=Stock(cantidad_disponible=Decimal("1")),
+    )
+    db.add(producto)
+
+    with pytest.raises(IntegrityError):
+        db.commit()
+    db.rollback()
+
+
+def test_constraint_de_stock_maximo(db):
+    producto = Producto(
+        nombre="Stock excedido",
+        codigo_barras="3999999999992",
+        unidad="kg",
+        precio=Decimal("1"),
+        stock=Stock(cantidad_disponible=Decimal("100000.001")),
+    )
+    db.add(producto)
+
+    with pytest.raises(IntegrityError):
+        db.commit()
+    db.rollback()
+
+
+def test_busqueda_sin_acentos(client, login):
+    login(client, "encargado1", "encargado123")
+
+    productos = client.get("/productos", params={"q": "budin"}).json()
+    assert any(producto["nombre"] == "Budín de limón" for producto in productos)
+
+
+def test_busqueda_escapa_comodines(client, login):
+    login(client, "encargado1", "encargado123")
+    crear_producto(
+        client,
+        nombre="Pan 100% integral",
+        codigo_barras="3000000000089",
+    )
+
+    productos = client.get("/productos", params={"q": "%"}).json()
+    assert [producto["nombre"] for producto in productos] == [
+        "Pan 100% integral"
+    ]
+
+    assert client.get("/productos", params={"q": "_"}).json() == []
 
 
 def test_cambiar_unidad_sin_ventas(client, login):

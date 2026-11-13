@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import Modal from "@/components/Modal";
 import { formatearCantidad, formatearMoneda } from "@/lib/formato";
+import { CANTIDAD_MAX } from "@/lib/limites";
 
 /**
  * Pide los kilos cuando el producto se vende por peso.
@@ -32,6 +33,16 @@ export default function ModalCantidad({ producto, onConfirmar, onCancelar }) {
 
     if (!Number.isFinite(numero) || numero <= 0) {
       setError("Ingresá una cantidad mayor a cero.");
+      return;
+    }
+
+    if (numero > CANTIDAD_MAX) {
+      setError(
+        `La cantidad máxima permitida es ${formatearCantidad(
+          CANTIDAD_MAX,
+          "kg"
+        )} kg.`
+      );
       return;
     }
 
@@ -66,7 +77,10 @@ export default function ModalCantidad({ producto, onConfirmar, onCancelar }) {
             inputMode="decimal"
             step="0.001"
             min="0.001"
-            max={producto.cantidad_disponible}
+            max={Math.min(
+              Number(producto.cantidad_disponible),
+              CANTIDAD_MAX
+            )}
             autoFocus
             value={cantidad}
             onChange={(evento) => {

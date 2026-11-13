@@ -9,7 +9,14 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+# Límites de negocio. Quedan por debajo de la capacidad de Numeric(10,2) y
+# Numeric(10,3) para que la aplicación nunca llegue a un error de la base.
+PRECIO_MAX = Decimal("1000000.00")
+STOCK_MAX = Decimal("100000.000")
+CANTIDAD_MAX = Decimal("10000.000")
+TOTAL_MAX = Decimal("10000000.00")
 
 
 class LoginIn(BaseModel):
@@ -75,10 +82,22 @@ class ProductoIn(BaseModel):
     nombre: str = Field(min_length=1, max_length=100)
     codigo_barras: str = Field(min_length=1, max_length=50)
     unidad: Literal["unidad", "kg"]
-    precio: Decimal = Field(gt=0)
+    precio: Decimal = Field(gt=0, le=PRECIO_MAX)
     proveedor_id: int | None = None
-    cantidad_inicial: Decimal = Field(default=Decimal("0"), ge=0)
+    cantidad_inicial: Decimal = Field(default=Decimal("0"), ge=0, le=STOCK_MAX)
     activo: bool = True
+
+    @model_validator(mode="after")
+    def validar_stock_entero(self):
+        """Un producto por unidad no puede tener stock fraccionario."""
+        if (
+            self.unidad == "unidad"
+            and self.cantidad_inicial != self.cantidad_inicial.to_integral_value()
+        ):
+            raise ValueError(
+                "El stock de un producto por unidad debe ser entero."
+            )
+        return self
 
 
 class ProductoUpdate(BaseModel):
@@ -89,7 +108,7 @@ class ProductoUpdate(BaseModel):
     nombre: str | None = Field(default=None, min_length=1, max_length=100)
     codigo_barras: str | None = Field(default=None, min_length=1, max_length=50)
     unidad: Literal["unidad", "kg"] | None = None
-    precio: Decimal | None = Field(default=None, gt=0)
+    precio: Decimal | None = Field(default=None, gt=0, le=PRECIO_MAX)
     activo: bool | None = None
 
 
@@ -109,7 +128,7 @@ class ProductoOut(BaseModel):
 class StockIn(BaseModel):
     """Nueva cantidad disponible para un producto."""
 
-    cantidad_disponible: Decimal = Field(ge=0)
+    cantidad_disponible: Decimal = Field(ge=0, le=STOCK_MAX)
 
 
 class StockOut(BaseModel):
@@ -130,7 +149,7 @@ class ItemIn(BaseModel):
     """Un renglón del carrito: producto y cantidad."""
 
     producto_id: int = Field(gt=0)
-    cantidad: Decimal = Field(gt=0)
+    cantidad: Decimal = Field(gt=0, le=CANTIDAD_MAX)
 
 
 class VentaIn(BaseModel):

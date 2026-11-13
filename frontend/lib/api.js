@@ -13,15 +13,34 @@
  * @returns {Promise<any>} Cuerpo JSON de la respuesta.
  * @throws {Error} Con el mensaje del backend o "Error inesperado".
  */
+function mensajeDeError(detalle) {
+  // En los 422 de FastAPI, detail es una lista de errores de validación.
+  if (Array.isArray(detalle)) {
+    return "Datos inválidos. Revisá los campos.";
+  }
+  if (typeof detalle === "string" && detalle.trim()) {
+    return detalle;
+  }
+  return "Error inesperado";
+}
+
 export async function api(path, init) {
-  const respuesta = await fetch(`/api${path}`, {
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  });
+  let respuesta;
+
+  try {
+    respuesta = await fetch(`/api${path}`, {
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    });
+  } catch {
+    throw new Error(
+      "No se pudo conectar con el servidor. Revisá la conexión e intentá de nuevo."
+    );
+  }
 
   const datos = await respuesta.json().catch(() => null);
 
@@ -35,7 +54,12 @@ export async function api(path, init) {
   }
 
   if (!respuesta.ok) {
-    throw new Error(datos?.detail ?? "Error inesperado");
+    if (respuesta.status >= 500 && !datos?.detail) {
+      throw new Error(
+        "Error del servidor. Intentá de nuevo en unos minutos."
+      );
+    }
+    throw new Error(mensajeDeError(datos?.detail));
   }
 
   return datos;

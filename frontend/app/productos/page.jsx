@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Modal from "@/components/Modal";
 import { api } from "@/lib/api";
 import { formatearCantidad, formatearMoneda } from "@/lib/formato";
+import { PRECIO_MAX, STOCK_MAX } from "@/lib/limites";
 import { useSesion } from "@/lib/sesion";
 
 const FORMULARIO_VACIO = {
@@ -86,6 +87,30 @@ export default function Productos() {
       return;
     }
 
+    if (Number(formulario.precio) > PRECIO_MAX) {
+      setError(
+        `El precio máximo permitido es ${formatearMoneda(PRECIO_MAX)}.`
+      );
+      return;
+    }
+
+    const stockInicial = Number(formulario.cantidad_inicial) || 0;
+
+    if (stockInicial > STOCK_MAX) {
+      setError(
+        `El stock máximo permitido es ${formatearCantidad(
+          STOCK_MAX,
+          formulario.unidad
+        )}.`
+      );
+      return;
+    }
+
+    if (formulario.unidad === "unidad" && !Number.isInteger(stockInicial)) {
+      setError("El stock de un producto por unidad debe ser entero.");
+      return;
+    }
+
     setCreando(true);
     try {
       await api("/productos", {
@@ -136,6 +161,24 @@ export default function Productos() {
 
     if (!(Number(formEdicion.precio) > 0)) {
       setErrorModal("El precio tiene que ser mayor a cero.");
+      return;
+    }
+
+    if (Number(formEdicion.precio) > PRECIO_MAX) {
+      setErrorModal(
+        `El precio máximo permitido es ${formatearMoneda(PRECIO_MAX)}.`
+      );
+      return;
+    }
+
+    if (
+      formEdicion.unidad === "unidad" &&
+      productoEditando.unidad !== "unidad" &&
+      !Number.isInteger(Number(productoEditando.cantidad_disponible))
+    ) {
+      setErrorModal(
+        "Ajustá el stock a un número entero antes de cambiar la unidad."
+      );
       return;
     }
 
@@ -194,6 +237,24 @@ export default function Productos() {
     const cantidad = Number(cantidadStock);
     if (!Number.isFinite(cantidad) || cantidad < 0) {
       setErrorModal("La cantidad tiene que ser cero o mayor.");
+      return;
+    }
+
+    if (cantidad > STOCK_MAX) {
+      setErrorModal(
+        `El stock máximo permitido es ${formatearCantidad(
+          STOCK_MAX,
+          productoStock.unidad
+        )}.`
+      );
+      return;
+    }
+
+    if (
+      productoStock.unidad === "unidad" &&
+      !Number.isInteger(cantidad)
+    ) {
+      setErrorModal("El stock de un producto por unidad debe ser entero.");
       return;
     }
 
@@ -322,6 +383,7 @@ export default function Productos() {
               <input
                 type="number"
                 min="0.01"
+                max={PRECIO_MAX}
                 step="0.01"
                 required
                 value={formulario.precio}
@@ -339,6 +401,7 @@ export default function Productos() {
               <input
                 type="number"
                 min="0"
+                max={STOCK_MAX}
                 step={formulario.unidad === "kg" ? "0.001" : "1"}
                 value={formulario.cantidad_inicial}
                 onChange={(evento) =>
@@ -526,6 +589,7 @@ export default function Productos() {
                 <input
                   type="number"
                   min="0.01"
+                  max={PRECIO_MAX}
                   step="0.01"
                   required
                   value={formEdicion.precio}
@@ -601,6 +665,7 @@ export default function Productos() {
               <input
                 type="number"
                 min="0"
+                max={STOCK_MAX}
                 step={productoStock.unidad === "kg" ? "0.001" : "1"}
                 required
                 autoFocus

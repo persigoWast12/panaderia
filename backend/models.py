@@ -83,6 +83,9 @@ class Producto(Base):
     __table_args__ = (
         CheckConstraint("unidad IN ('unidad', 'kg')", name="ck_producto_unidad"),
         CheckConstraint("precio > 0", name="ck_producto_precio"),
+        CheckConstraint(
+            "precio <= 1000000.00", name="ck_producto_precio_max"
+        ),
     )
 
 
@@ -102,6 +105,10 @@ class Stock(Base):
     __table_args__ = (
         CheckConstraint(
             "cantidad_disponible >= 0", name="ck_stock_cantidad"
+        ),
+        CheckConstraint(
+            "cantidad_disponible <= 100000.000",
+            name="ck_stock_cantidad_max",
         ),
     )
 
@@ -129,6 +136,7 @@ class Venta(Base):
             name="ck_venta_forma_pago",
         ),
         CheckConstraint("total >= 0", name="ck_venta_total"),
+        CheckConstraint("total <= 10000000.00", name="ck_venta_total_max"),
         Index("ix_venta_fecha_hora", "fecha_hora"),
     )
 
@@ -150,6 +158,9 @@ class DetalleVenta(Base):
 
     __table_args__ = (
         CheckConstraint("cantidad > 0", name="ck_detalle_cantidad"),
+        CheckConstraint(
+            "cantidad <= 10000.000", name="ck_detalle_cantidad_max"
+        ),
         Index("ix_detalle_venta_venta_id", "venta_id"),
     )
 
@@ -169,3 +180,4 @@ class Sesion(Base):
     empleado: Mapped[Empleado] = relationship(back_populates="sesiones")
 
     __table_args__ = (Index("ix_sesion_vence", "vence"),)
+

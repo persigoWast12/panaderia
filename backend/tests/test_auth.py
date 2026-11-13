@@ -98,19 +98,6 @@ def test_encargado_no_administra_empleados(client, login):
 
 
 def test_contador_solo_consulta_ventas(client, login):
-    login(client, "dueno1", "dueno123")
-    creado = client.post(
-        "/empleados",
-        json={
-            "nombre": "Contador de prueba",
-            "usuario": "contador1",
-            "rol": "contador",
-            "password": "contador123",
-        },
-    )
-    assert creado.status_code == 201
-
-    client.cookies.clear()
     login(client, "contador1", "contador123")
 
     assert client.get("/ventas").status_code == 200

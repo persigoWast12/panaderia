@@ -26,6 +26,10 @@ async def lifespan(app: FastAPI):
 
     db = SessionLocal()
     try:
+        # Necesaria para que la búsqueda ignore acentos ("budin" -> "Budín").
+        db.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent"))
+        db.commit()
+
         # El seed solo inserta si no hay ningún empleado (base vacía).
         if cargar_datos_iniciales(db):
             print("Seed: datos de ejemplo cargados.")
