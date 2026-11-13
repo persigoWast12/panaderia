@@ -355,6 +355,83 @@ def test_total_maximo_de_venta(client, login, db):
     assert stock_de(client, producto["id"])["cantidad_disponible"] == 10.0
 
 
+def test_nombre_producto_congelado_en_la_venta(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = client.post(
+        "/productos",
+        json={
+            "nombre": "Pan con nombre viejo",
+            "codigo_barras": "3000000000096",
+            "unidad": "unidad",
+            "precio": 100,
+            "cantidad_inicial": 5,
+        },
+    ).json()
+
+    client.cookies.clear()
+    login(client, "cajero1", "cajero123")
+    venta = client.post(
+        "/ventas",
+        json={
+            "forma_pago": "efectivo",
+            "items": [{"producto_id": producto["id"], "cantidad": 1}],
+        },
+    ).json()
+
+    client.cookies.clear()
+    login(client, "encargado1", "encargado123")
+    assert (
+        client.put(
+            f"/productos/{producto['id']}",
+            json={"nombre": "Pan con nombre nuevo"},
+        ).status_code
+        == 200
+    )
+
+    client.cookies.clear()
+    login(client, "dueno1", "dueno123")
+    ventas = client.get("/ventas").json()
+    encontrada = next(v for v in ventas if v["id"] == venta["id"])
+    assert encontrada["items"][0]["nombre"] == "Pan con nombre viejo"
+
+
+def test_cantidad_con_mas_de_tres_decimales(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = client.post(
+        "/productos",
+        json={
+            "nombre": "Pan por kilo con decimales",
+            "codigo_barras": "3000000000133",
+            "unidad": "kg",
+            "precio": 100,
+            "cantidad_inicial": 5,
+        },
+    ).json()
+
+    client.cookies.clear()
+    login(client, "cajero1", "cajero123")
+
+    excedida = client.post(
+        "/ventas",
+        json={
+            "forma_pago": "efectivo",
+            "items": [
+                {"producto_id": producto["id"], "cantidad": 1.2345}
+            ],
+        },
+    )
+    assert excedida.status_code == 422
+
+    valida = client.post(
+        "/ventas",
+        json={
+            "forma_pago": "efectivo",
+            "items": [{"producto_id": producto["id"], "cantidad": 1.234}],
+        },
+    )
+    assert valida.status_code == 201
+
+
 def test_constraint_de_cantidad_maxima(db):
     venta = Venta(
         empleado_id=1,
@@ -364,6 +441,7 @@ def test_constraint_de_cantidad_maxima(db):
     venta.detalles.append(
         DetalleVenta(
             producto_id=1,
+            nombre_producto="Producto de prueba",
             cantidad=Decimal("10000.001"),
             precio_unitario=Decimal("1"),
         )

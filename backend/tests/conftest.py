@@ -2,11 +2,22 @@
 
 import os
 
+from sqlalchemy.engine import make_url
+
 url_pruebas = os.environ.get("TEST_DATABASE_URL")
 if not url_pruebas:
     raise RuntimeError(
         "Definí TEST_DATABASE_URL antes de correr pytest, por ejemplo: "
         "postgresql+psycopg://postgres:clave@localhost:5432/panaderia_test"
+    )
+
+# Guarda de seguridad: las pruebas hacen drop_all y TRUNCATE. Si la URL
+# apuntara por error a la base real, se perderían todos los datos.
+nombre_base = make_url(url_pruebas).database or ""
+if not nombre_base.endswith("_test"):
+    raise RuntimeError(
+        f"TEST_DATABASE_URL apunta a '{nombre_base}'. "
+        "Por seguridad, la base de pruebas tiene que terminar en '_test'."
     )
 
 # Tiene que quedar definido antes de importar la app.

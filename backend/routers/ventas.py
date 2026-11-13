@@ -43,7 +43,7 @@ def _venta_out(venta: Venta) -> dict:
         items.append(
             {
                 "producto_id": detalle.producto_id,
-                "nombre": detalle.producto.nombre,
+                "nombre": detalle.nombre_producto,
                 "unidad": detalle.producto.unidad,
                 "cantidad": detalle.cantidad,
                 "precio_unitario": detalle.precio_unitario,
@@ -177,6 +177,7 @@ def crear_venta(
             venta.detalles.append(
                 DetalleVenta(
                     producto_id=producto_id,
+                    nombre_producto=producto.nombre,
                     cantidad=cantidad,
                     precio_unitario=producto.precio,
                 )
@@ -205,7 +206,9 @@ def crear_venta(
 def listar_ventas(
     fecha: date | None = None,
     db: Session = Depends(get_db),
-    _empleado: Empleado = Depends(require_rol("contador", "dueno")),
+    _empleado: Empleado = Depends(
+        require_rol("cajero", "encargado", "contador", "dueno")
+    ),
 ):
     """Lista las ventas de un día (hoy por defecto), más recientes primero.
 

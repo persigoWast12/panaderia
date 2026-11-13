@@ -213,6 +213,50 @@ def test_producto_por_unidad_rechaza_stock_fraccionario_al_crear(
     assert respuesta.status_code == 422
 
 
+def test_rechaza_mas_de_dos_decimales_en_precio(client, login):
+    login(client, "encargado1", "encargado123")
+
+    respuesta = crear_producto(
+        client,
+        precio=100.005,
+        codigo_barras="3000000000102",
+    )
+    assert respuesta.status_code == 422
+
+
+def test_rechaza_mas_de_tres_decimales_en_stock_inicial(client, login):
+    login(client, "encargado1", "encargado123")
+
+    excedido = crear_producto(
+        client,
+        unidad="kg",
+        cantidad_inicial=1.2345,
+        codigo_barras="3000000000119",
+    )
+    assert excedido.status_code == 422
+
+    valido = crear_producto(
+        client,
+        unidad="kg",
+        cantidad_inicial=1.234,
+        codigo_barras="3000000000126",
+    )
+    assert valido.status_code == 201
+
+
+def test_rechaza_mas_de_tres_decimales_al_ajustar_stock(client, login):
+    login(client, "encargado1", "encargado123")
+    producto = crear_producto(
+        client, unidad="kg", cantidad_inicial=5
+    ).json()
+
+    respuesta = client.put(
+        f"/stock/{producto['id']}",
+        json={"cantidad_disponible": 1.2345},
+    )
+    assert respuesta.status_code == 422
+
+
 def test_constraint_de_precio_maximo(db):
     producto = Producto(
         nombre="Precio excedido",

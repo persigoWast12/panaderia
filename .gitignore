@@ -1,5 +1,6 @@
 # Documentación personal (no se sube al repositorio)
 docs/**/*.md
+AVANCE.md
 
 # Entorno y secretos
 backend/.venv/

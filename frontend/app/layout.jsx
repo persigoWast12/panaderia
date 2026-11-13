@@ -2,8 +2,8 @@ import "./globals.css";
 
 /** Metadatos que Next usa para el título y la descripción de la pestaña. */
 export const metadata = {
-  title: "Panadería",
-  description: "Sistema de gestión de la panadería",
+  title: "El Molino",
+  description: "Sistema de gestión de la panadería El Molino",
 };
 
 /**

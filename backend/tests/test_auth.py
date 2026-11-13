@@ -107,6 +107,20 @@ def test_contador_solo_consulta_ventas(client, login):
     assert client.post("/ventas", json=VENTA).status_code == 403
 
 
+def test_todos_los_roles_consultan_ventas(client, login):
+    """La especificación da GET /ventas a cajero y encargado; además se
+    mantienen contador y dueño, que son roles agregados."""
+    for usuario, password in (
+        ("cajero1", "cajero123"),
+        ("encargado1", "encargado123"),
+        ("contador1", "contador123"),
+        ("dueno1", "dueno123"),
+    ):
+        client.cookies.clear()
+        login(client, usuario, password)
+        assert client.get("/ventas").status_code == 200
+
+
 def test_dueno_no_vende(client, login):
     login(client, "dueno1", "dueno123")
 

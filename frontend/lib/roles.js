@@ -30,7 +30,11 @@ export const NAVEGACION = [
     texto: "Productos",
     roles: ["encargado", "dueno"],
   },
-  { href: "/ventas", texto: "Ventas", roles: ["contador", "dueno"] },
+  {
+    href: "/ventas",
+    texto: "Ventas",
+    roles: ["cajero", "encargado", "contador", "dueno"],
+  },
   { href: "/empleados", texto: "Empleados", roles: ["dueno"] },
 ];
 

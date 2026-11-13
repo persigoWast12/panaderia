@@ -25,6 +25,8 @@ const FORMAS = ["efectivo", "billetera_virtual", "tarjeta"];
  */
 export default function Ventas() {
   const { empleado, cargando, error: errorSesion, permitido } = useSesion([
+    "cajero",
+    "encargado",
     "contador",
     "dueno",
   ]);

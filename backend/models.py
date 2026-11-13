@@ -149,6 +149,9 @@ class DetalleVenta(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     venta_id: Mapped[int] = mapped_column(ForeignKey("venta.id"))
     producto_id: Mapped[int] = mapped_column(ForeignKey("producto.id"))
+    # Copia del nombre al momento de la venta: si el producto se renombra,
+    # la venta vieja conserva el nombre con el que se vendió.
+    nombre_producto: Mapped[str] = mapped_column(String(100))
     cantidad: Mapped[Decimal] = mapped_column(Numeric(10, 3))
     # Copia del precio del producto al momento de la venta.
     precio_unitario: Mapped[Decimal] = mapped_column(Numeric(10, 2))

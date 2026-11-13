@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import { api } from "@/lib/api";
 import { RUTA_INICIO } from "@/lib/roles";
@@ -44,8 +45,15 @@ export default function Login() {
     <main className="flex min-h-screen items-center justify-center bg-amber-50 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div className="text-5xl">🥖</div>
-          <h1 className="mt-2 text-2xl font-bold text-amber-900">Panadería</h1>
+          <Image
+            src="/logo.png"
+            alt="Logo de El Molino"
+            width={112}
+            height={112}
+            preload
+            className="mx-auto"
+          />
+          <h1 className="mt-2 text-2xl font-bold text-amber-900">El Molino</h1>
           <p className="text-sm text-stone-600">Ingresá con tu usuario</p>
         </div>
 

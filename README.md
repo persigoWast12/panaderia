@@ -122,8 +122,8 @@ Los roles son:
 
 | Rol | Qué puede hacer |
 |---|---|
-| `cajero` | Vender, consultar productos y stock. |
-| `encargado` | Administrar productos y stock. No vende. |
+| `cajero` | Vender, consultar productos, stock y ventas. |
+| `encargado` | Administrar productos y stock. Consultar ventas. No vende. |
 | `contador` | Solo consultar ventas. |
 | `dueno` | Todo lo del encargado, más consultar ventas y administrar empleados. No vende. |
 
@@ -144,7 +144,7 @@ Los endpoints protegidos usan la dependencia `require_rol(...)` y responden `403
 | `GET /stock` | Lista todos los productos con precio, stock y si tienen ventas (cajero, encargado y dueño) |
 | `PUT /stock/{producto_id}` | Fija la cantidad disponible (encargado y dueño) |
 | `POST /ventas` | Registra una venta y descuenta stock (solo cajero) |
-| `GET /ventas?fecha=` | Lista las ventas del día o de la fecha indicada (contador y dueño) |
+| `GET /ventas?fecha=` | Lista las ventas del día o de la fecha indicada (todos los roles) |
 | `GET /empleados` | Lista todos los empleados (solo dueño) |
 | `POST /empleados` | Crea un empleado (solo dueño) |
 | `PUT /empleados/{id}` | Edita nombre, usuario, rol o estado (solo dueño) |
@@ -227,7 +227,7 @@ Después se arranca el backend normalmente: `create_all` crea las tablas nuevas 
 
 ### Ventas
 
-Solo el cajero registra ventas; el contador y el dueño pueden consultarlas. El backend calcula el total y descuenta el stock en una sola transacción: si falta stock, no se guarda nada.
+Solo el cajero registra ventas; todos los roles pueden consultarlas. El backend calcula el total y descuenta el stock en una sola transacción: si falta stock, no se guarda nada.
 
 ```powershell
 # Login como cajero (guardando la cookie en $sesion)
@@ -241,7 +241,7 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/ventas -Method Post `
   -WebSession $sesion -ContentType "application/json" `
   -Body '{"forma_pago":"efectivo","items":[{"producto_id":1,"cantidad":1.250},{"producto_id":4,"cantidad":2}]}'
 
-# Para consultar, iniciar sesión como contador o dueño
+# Para consultar, iniciar sesión con cualquier rol
 $consulta = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 Invoke-RestMethod -Uri http://127.0.0.1:8000/login -Method Post `
   -WebSession $consulta -ContentType "application/json" `
@@ -255,7 +255,7 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/ventas?fecha=2026-10-31" -WebSessi
 - `forma_pago`: `efectivo`, `billetera_virtual` o `tarjeta`.
 - Las cantidades de productos por `kg` aceptan decimales; las de `unidad` deben ser enteras.
 - Si se manda un `total` en el cuerpo, se ignora.
-- El precio unitario se copia del producto al momento de la venta.
+- El precio unitario y el nombre del producto se copian al momento de la venta: editar el producto después no altera las ventas viejas.
 
 ### Empleados
 
@@ -291,6 +291,8 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/empleados/5/password -Method Put `
 
 Está en `frontend/` y usa **Next.js 16** (App Router), **JavaScript (JSX)** y **Tailwind 4**. El navegador solo habla con `/api/...`; Next reenvía al backend usando `BACKEND_URL` (por defecto `http://127.0.0.1:8000`).
 
+> La cátedra permitió elegir libremente las tecnologías. Se usó Next.js con JavaScript/JSX y FastAPI por continuidad con otros trabajos del mismo stack. El TypeScript mencionado en la especificación original no era un requisito obligatorio.
+
 ### Instalación y arranque
 
 ```powershell
@@ -321,16 +323,14 @@ Para cambiar el destino del backend, copiar `frontend/.env.local.example` a `fro
 | `/login` | Todos | Inicia sesión y redirige según el rol. |
 | `/caja` | Cajero | Lector de códigos, búsqueda por nombre, carrito, kilos, total y cobro. |
 | `/productos` | Encargado y dueño | Alta, edición, activación y ajuste de stock. |
-| `/ventas` | Contador y dueño | Ventas por fecha, total del día y por forma de pago. |
+| `/ventas` | Todos los roles | Ventas por fecha, total del día y por forma de pago. |
 | `/empleados` | Dueño | Alta, edición, activación, baja y reseteo de contraseña. |
 
 El header muestra el nombre y el rol, y solo ofrece las secciones permitidas.
 
 ### Manual de uso
 
-- `manual/manual-de-uso.md`: fuente editable.
-- `manual/manual-de-uso.pdf`: versión para leer o imprimir.
-- `manual/img/`: capturas usadas en el manual.
+- `manual-de-uso.pdf`: versión para leer o imprimir.
 
 ## Pruebas
 
@@ -352,7 +352,7 @@ $env:TEST_DATABASE_URL="postgresql+psycopg://postgres:TU_CLAVE@localhost:5432/pa
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Son **56 pruebas** y cubren login y sesiones, los cuatro roles, productos y stock, ventas (incluida una prueba de dos ventas simultáneas), límites de precio/stock/cantidad y administración de empleados.
+Son **62 pruebas** y cubren login y sesiones, los cuatro roles, productos y stock, ventas (incluida una prueba de dos ventas simultáneas), límites y precisión decimal, nombre y precio congelados en la venta y administración de empleados.
 
 ## Estructura
 
@@ -395,7 +395,7 @@ panaderia/
 │   ├── next.config.mjs    # rewrite de /api
 │   ├── package.json
 │   └── .env.local.example
-├── manual/                # manual de uso y capturas
+├── manual-de-uso.pdf      # manual para leer o imprimir
 ├── docs/                  # documentación personal (ignorada por git)
 ├── .gitignore
 └── README.md

@@ -82,9 +82,17 @@ class ProductoIn(BaseModel):
     nombre: str = Field(min_length=1, max_length=100)
     codigo_barras: str = Field(min_length=1, max_length=50)
     unidad: Literal["unidad", "kg"]
-    precio: Decimal = Field(gt=0, le=PRECIO_MAX)
+    precio: Decimal = Field(
+        gt=0, le=PRECIO_MAX, max_digits=10, decimal_places=2
+    )
     proveedor_id: int | None = None
-    cantidad_inicial: Decimal = Field(default=Decimal("0"), ge=0, le=STOCK_MAX)
+    cantidad_inicial: Decimal = Field(
+        default=Decimal("0"),
+        ge=0,
+        le=STOCK_MAX,
+        max_digits=10,
+        decimal_places=3,
+    )
     activo: bool = True
 
     @model_validator(mode="after")
@@ -108,7 +116,9 @@ class ProductoUpdate(BaseModel):
     nombre: str | None = Field(default=None, min_length=1, max_length=100)
     codigo_barras: str | None = Field(default=None, min_length=1, max_length=50)
     unidad: Literal["unidad", "kg"] | None = None
-    precio: Decimal | None = Field(default=None, gt=0, le=PRECIO_MAX)
+    precio: Decimal | None = Field(
+        default=None, gt=0, le=PRECIO_MAX, max_digits=10, decimal_places=2
+    )
     activo: bool | None = None
 
 
@@ -128,7 +138,9 @@ class ProductoOut(BaseModel):
 class StockIn(BaseModel):
     """Nueva cantidad disponible para un producto."""
 
-    cantidad_disponible: Decimal = Field(ge=0, le=STOCK_MAX)
+    cantidad_disponible: Decimal = Field(
+        ge=0, le=STOCK_MAX, max_digits=10, decimal_places=3
+    )
 
 
 class StockOut(BaseModel):
@@ -149,7 +161,9 @@ class ItemIn(BaseModel):
     """Un renglón del carrito: producto y cantidad."""
 
     producto_id: int = Field(gt=0)
-    cantidad: Decimal = Field(gt=0, le=CANTIDAD_MAX)
+    cantidad: Decimal = Field(
+        gt=0, le=CANTIDAD_MAX, max_digits=10, decimal_places=3
+    )
 
 
 class VentaIn(BaseModel):

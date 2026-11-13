@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -41,9 +42,16 @@ export default function Header({ empleado }) {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
         <Link
           href={RUTA_INICIO[empleado.rol]}
-          className="text-lg font-bold tracking-tight"
+          className="flex items-center gap-2 text-lg font-bold tracking-tight"
         >
-          🥖 Panadería
+          <Image
+            src="/logo.png"
+            alt="Logo de El Molino"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+          El Molino
         </Link>
 
         <nav className="flex flex-wrap gap-1">
